@@ -22,6 +22,9 @@ const envSchema = z.object({
     .string()
     .min(32, "JWT_REFRESH_SECRET must be at least 32 characters"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("30d"),
+  JWT_RESET_SECRET: z
+    .string()
+    .min(32, "JWT_RESET_SECRET must be at least 32 characters"),
 
   // Security
   BCRYPT_ROUNDS: z.string().default("12").transform(Number),
@@ -84,6 +87,7 @@ export const config = {
     expiresIn: env.JWT_EXPIRES_IN,
     refreshSecret: env.JWT_REFRESH_SECRET,
     refreshExpiresIn: env.JWT_REFRESH_EXPIRES_IN,
+    resetSecret: env.JWT_RESET_SECRET,
   },
 
   security: {

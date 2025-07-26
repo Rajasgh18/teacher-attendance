@@ -53,10 +53,15 @@ export const commonValidations = {
       "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one number, and one special character"
     ),
 
-  name: body("name")
+  firstName: body("firstName")
     .trim()
-    .isLength({ min: 2, max: 50 })
-    .withMessage("Name must be between 2 and 50 characters"),
+    .isLength({ min: 2, max: 100 })
+    .withMessage("First name must be between 2 and 100 characters"),
+
+  lastName: body("lastName")
+    .trim()
+    .isLength({ min: 2, max: 100 })
+    .withMessage("Last name must be between 2 and 100 characters"),
 
   // Teacher validations
   employeeId: body("employeeId")
@@ -115,7 +120,8 @@ export const joiSchemas = {
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/
       )
       .required(),
-    name: Joi.string().min(2).max(50).required(),
+    firstName: Joi.string().min(2).max(100).required(),
+    lastName: Joi.string().min(2).max(100).required(),
     role: Joi.string()
       .valid("admin", "teacher", "principal")
       .default("teacher"),
@@ -123,9 +129,9 @@ export const joiSchemas = {
 
   updateUser: Joi.object({
     email: Joi.string().email().optional(),
-    name: Joi.string().min(2).max(50).optional(),
+    firstName: Joi.string().min(2).max(100).optional(),
+    lastName: Joi.string().min(2).max(100).optional(),
     role: Joi.string().valid("admin", "teacher", "principal").optional(),
-    isActive: Joi.boolean().optional(),
   }),
 
   login: Joi.object({
@@ -233,12 +239,14 @@ export const userValidations = {
   create: createValidationMiddleware([
     commonValidations.email,
     commonValidations.password,
-    commonValidations.name,
+    commonValidations.firstName,
+    commonValidations.lastName,
   ]),
 
   update: createValidationMiddleware([
     commonValidations.email.optional(),
-    commonValidations.name.optional(),
+    commonValidations.firstName.optional(),
+    commonValidations.lastName.optional(),
   ]),
 
   login: createValidationMiddleware([
