@@ -32,6 +32,71 @@ export const authRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiter for subject endpoints
+export const subjectRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: "Too many requests to subject endpoints, please try again later.",
+    timestamp: new Date().toISOString(),
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for teacher endpoints
+export const teacherRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: "Too many requests to teacher endpoints, please try again later.",
+    timestamp: new Date().toISOString(),
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for class endpoints
+export const classRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: "Too many requests to class endpoints, please try again later.",
+    timestamp: new Date().toISOString(),
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for student endpoints
+export const studentRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: "Too many requests to student endpoints, please try again later.",
+    timestamp: new Date().toISOString(),
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// Rate limiter for user endpoints
+export const userRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: {
+    success: false,
+    message: "Too many requests to user endpoints, please try again later.",
+    timestamp: new Date().toISOString(),
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 // CORS configuration
 export const corsOptions: cors.CorsOptions = {
   origin: config.cors.origin,

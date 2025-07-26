@@ -1,16 +1,17 @@
 import express, { Router } from "express";
-import { AuthController } from "@/controllers/authController";
-import { authenticate } from "@/middleware/auth";
+
 import {
   joiSchemas,
   userValidations,
   validateWithJoi,
 } from "@/middleware/validation";
+import { authenticate } from "@/middleware/auth";
 import { authRateLimiter } from "@/middleware/security";
+import { AuthController } from "@/controllers/authController";
 
 const router: express.Router = Router();
 
-// router.use(authRateLimiter);
+router.use(authRateLimiter);
 router.post("/register", userValidations.create, AuthController.register);
 router.post("/login", userValidations.login, AuthController.login);
 router.post(

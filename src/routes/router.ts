@@ -1,6 +1,11 @@
 import { Router } from "express";
 
 import authRoutes from "./auth";
+import userRoutes from "./user";
+import classRoutes from "./class";
+import studentRoutes from "./student";
+import subjectRoutes from "./subject";
+import teacherRoutes from "./teacher";
 
 const appRouter: Router = Router();
 
@@ -15,5 +20,10 @@ appRouter.get("/health", (_, res) => {
 });
 
 appRouter.use("/auth", authRoutes);
+appRouter.use("/user", userRoutes);
+appRouter.use("/class", classRoutes);
+appRouter.use("/subject", subjectRoutes);
+appRouter.use("/teacher", teacherRoutes);
+appRouter.use("/student", studentRoutes);
 
 export default appRouter;

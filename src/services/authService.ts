@@ -1,8 +1,8 @@
-import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+
 import { config } from "@/config";
-import { UserModel } from "@/models/UserModel";
 import type { User } from "@/db/schema";
+import { UserService } from "@/services/userService";
 
 export interface LoginCredentials {
   email: string;
@@ -28,13 +28,13 @@ export class AuthService {
     data: RegisterData
   ): Promise<{ user: User; token: string; refreshToken: string }> {
     // Check if user already exists
-    const existingUser = await UserModel.findByEmail(data.email);
+    const existingUser = await UserService.getByEmail(data.email);
     if (existingUser) {
       throw new Error("User with this email already exists");
     }
 
     // Create new user
-    const user = await UserModel.create({
+    const user = await UserService.create({
       email: data.email,
       password: data.password,
       firstName: data.firstName,
@@ -59,14 +59,14 @@ export class AuthService {
     credentials: LoginCredentials
   ): Promise<{ user: User; token: string; refreshToken: string }> {
     // Find user by email
-    const user = await UserModel.findByEmail(credentials.email);
+    const user = await UserService.getByEmail(credentials.email);
     if (!user) {
       throw new Error("Invalid credentials");
     }
 
     // Verify password
-    const isValidPassword = await UserModel.verifyPassword(
-      user,
+    const isValidPassword = await UserService.verifyPassword(
+      user.id,
       credentials.password
     );
     if (!isValidPassword) {
@@ -97,7 +97,7 @@ export class AuthService {
       ) as TokenPayload;
 
       // Check if user still exists
-      const user = await UserModel.findById(payload.userId);
+      const user = await UserService.getById(payload.userId);
       if (!user) {
         throw new Error("User not found");
       }
@@ -124,14 +124,14 @@ export class AuthService {
     newPassword: string
   ): Promise<void> {
     // Get user
-    const user = await UserModel.findById(userId);
+    const user = await UserService.getById(userId);
     if (!user) {
       throw new Error("User not found");
     }
 
     // Verify current password
-    const isValidPassword = await UserModel.verifyPassword(
-      user,
+    const isValidPassword = await UserService.verifyPassword(
+      user.id,
       currentPassword
     );
     if (!isValidPassword) {
@@ -139,12 +139,12 @@ export class AuthService {
     }
 
     // Update password
-    await UserModel.updatePassword(userId, newPassword);
+    await UserService.updatePassword(userId, newPassword);
   }
 
   static async forgotPassword(email: string): Promise<void> {
     // Check if user exists
-    const user = await UserModel.findByEmail(email);
+    const user = await UserService.getByEmail(email);
     if (!user) {
       // Don't reveal if user exists or not for security
       return;
@@ -166,7 +166,7 @@ export class AuthService {
       };
 
       // Update password
-      await UserModel.updatePassword(payload.userId, newPassword);
+      await UserService.updatePassword(payload.userId, newPassword);
     } catch (error) {
       throw new Error("Invalid or expired reset token");
     }

@@ -227,6 +227,21 @@ export const joiSchemas = {
       )
       .required(),
   }),
+
+  // Subject schemas
+  createSubject: Joi.object({
+    name: Joi.string().min(2).max(100).required(),
+    code: Joi.string().min(2).max(20).required(),
+    description: Joi.string().max(500).optional(),
+    isActive: Joi.boolean().default(true),
+  }),
+
+  updateSubject: Joi.object({
+    name: Joi.string().min(2).max(100).optional(),
+    code: Joi.string().min(2).max(20).optional(),
+    description: Joi.string().max(500).optional(),
+    isActive: Joi.boolean().optional(),
+  }),
 };
 
 // Validation middleware factory

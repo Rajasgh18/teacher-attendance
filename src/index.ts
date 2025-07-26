@@ -56,12 +56,10 @@ const gracefulShutdown = (signal: string) => {
 
 // Start server
 const server = app.listen(config.app.port, config.app.host, () => {
-  logger.info(
-    `🚀 Server running on http://${config.app.host}:${config.app.port}`
-  );
-  logger.info(`📊 Environment: ${config.app.env}`);
-  logger.info(`🔒 Security: Rate limiting enabled`);
-  logger.info(`📝 Logging: ${config.logging.level} level`);
+  logger.info(`Server running on http://${config.app.host}:${config.app.port}`);
+  logger.info(`Environment: ${config.app.env}`);
+  logger.info(`Security: Rate limiting enabled`);
+  logger.info(`Logging: ${config.logging.level} level`);
 });
 
 // Handle graceful shutdown

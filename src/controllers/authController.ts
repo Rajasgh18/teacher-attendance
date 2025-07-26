@@ -1,12 +1,23 @@
-import { Request, Response } from 'express';
-import { AuthService, type RegisterData, type LoginCredentials } from '@/services/authService';
-import { UserModel } from '@/models/UserModel';
-import { sendSuccess, sendCreated, sendBadRequest, sendUnauthorized, sendNotFound } from '@/utils/response';
-import { asyncHandler } from '@/middleware/errorHandler';
+import { Request, Response } from "express";
+
+import {
+  sendSuccess,
+  sendCreated,
+  sendNotFound,
+  sendBadRequest,
+  sendUnauthorized,
+} from "@/utils/response";
+import {
+  AuthService,
+  type RegisterData,
+  type LoginCredentials,
+} from "@/services/authService";
+import { UserModel } from "@/models/UserModel";
+import { asyncHandler } from "@/middleware/errorHandler";
 
 export class AuthController {
   static register = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password, firstName, lastName, role = 'teacher' } = req.body;
+    const { email, password, firstName, lastName, role = "teacher" } = req.body;
 
     const registerData: RegisterData = {
       email,
@@ -18,7 +29,7 @@ export class AuthController {
 
     try {
       const result = await AuthService.register(registerData);
-      
+
       sendCreated(
         res,
         {
@@ -36,10 +47,13 @@ export class AuthController {
             refreshToken: result.refreshToken,
           },
         },
-        'User registered successfully'
+        "User registered successfully"
       );
     } catch (error) {
-      if (error instanceof Error && error.message === 'User with this email already exists') {
+      if (
+        error instanceof Error &&
+        error.message === "User with this email already exists"
+      ) {
         sendBadRequest(res, error.message);
       } else {
         throw error;
@@ -57,7 +71,7 @@ export class AuthController {
 
     try {
       const result = await AuthService.login(credentials);
-      
+
       sendSuccess(
         res,
         {
@@ -75,10 +89,10 @@ export class AuthController {
             refreshToken: result.refreshToken,
           },
         },
-        'Login successful'
+        "Login successful"
       );
     } catch (error) {
-      if (error instanceof Error && error.message === 'Invalid credentials') {
+      if (error instanceof Error && error.message === "Invalid credentials") {
         sendUnauthorized(res, error.message);
       } else {
         throw error;
@@ -90,13 +104,13 @@ export class AuthController {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      sendBadRequest(res, 'Refresh token is required');
+      sendBadRequest(res, "Refresh token is required");
       return;
     }
 
     try {
       const result = await AuthService.refreshToken(refreshToken);
-      
+
       sendSuccess(
         res,
         {
@@ -105,10 +119,10 @@ export class AuthController {
             refreshToken: result.refreshToken,
           },
         },
-        'Token refreshed successfully'
+        "Token refreshed successfully"
       );
     } catch (error) {
-      if (error instanceof Error && error.message === 'Invalid refresh token') {
+      if (error instanceof Error && error.message === "Invalid refresh token") {
         sendUnauthorized(res, error.message);
       } else {
         throw error;
@@ -119,21 +133,21 @@ export class AuthController {
   static logout = asyncHandler(async (req: Request, res: Response) => {
     // TODO: Implement token blacklisting if needed
     // For now, just return success - client should discard tokens
-    
-    sendSuccess(res, null, 'Logout successful');
+
+    sendSuccess(res, null, "Logout successful");
   });
 
   static getProfile = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.userId;
-    
+
     if (!userId) {
-      sendUnauthorized(res, 'User not authenticated');
+      sendUnauthorized(res, "User not authenticated");
       return;
     }
 
     const user = await UserModel.findById(userId);
     if (!user) {
-      sendNotFound(res, 'User not found');
+      sendNotFound(res, "User not found");
       return;
     }
 
@@ -150,7 +164,7 @@ export class AuthController {
           updatedAt: user.updatedAt,
         },
       },
-      'Profile retrieved successfully'
+      "Profile retrieved successfully"
     );
   });
 
@@ -159,18 +173,18 @@ export class AuthController {
     const userId = req.user?.userId;
 
     if (!userId) {
-      sendUnauthorized(res, 'User not authenticated');
+      sendUnauthorized(res, "User not authenticated");
       return;
     }
 
     try {
       await AuthService.changePassword(userId, currentPassword, newPassword);
-      sendSuccess(res, null, 'Password changed successfully');
+      sendSuccess(res, null, "Password changed successfully");
     } catch (error) {
       if (error instanceof Error) {
-        if (error.message === 'User not found') {
+        if (error.message === "User not found") {
           sendNotFound(res, error.message);
-        } else if (error.message === 'Current password is incorrect') {
+        } else if (error.message === "Current password is incorrect") {
           sendBadRequest(res, error.message);
         } else {
           throw error;
@@ -186,7 +200,7 @@ export class AuthController {
 
     try {
       await AuthService.forgotPassword(email);
-      sendSuccess(res, null, 'Password reset email sent successfully');
+      sendSuccess(res, null, "Password reset email sent successfully");
     } catch (error) {
       throw error;
     }
@@ -197,13 +211,16 @@ export class AuthController {
 
     try {
       await AuthService.resetPassword(token, newPassword);
-      sendSuccess(res, null, 'Password reset successfully');
+      sendSuccess(res, null, "Password reset successfully");
     } catch (error) {
-      if (error instanceof Error && error.message === 'Invalid or expired reset token') {
+      if (
+        error instanceof Error &&
+        error.message === "Invalid or expired reset token"
+      ) {
         sendBadRequest(res, error.message);
       } else {
         throw error;
       }
     }
   });
-} 
+}
