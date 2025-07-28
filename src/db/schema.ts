@@ -92,15 +92,12 @@ export const classes = pgTable("classes", {
     .notNull(),
 });
 
-// Teacher Subject Class Assignment table (Many-to-Many relationship)
-export const teacherSubjectClass = pgTable("teacher_subject_class", {
+// Teacher Class Assignment table (Many-to-Many relationship for class-based attendance)
+export const teacherClass = pgTable("teacher_class", {
   id: uuid("id").primaryKey().defaultRandom(),
   teacherId: uuid("teacher_id")
     .notNull()
     .references(() => teachers.id, { onDelete: "cascade" }),
-  subjectId: uuid("subject_id")
-    .notNull()
-    .references(() => subjects.id, { onDelete: "cascade" }),
   classId: uuid("class_id")
     .notNull()
     .references(() => classes.id, { onDelete: "cascade" }),
@@ -165,9 +162,6 @@ export const studentAttendance = pgTable("student_attendance", {
   classId: uuid("class_id")
     .notNull()
     .references(() => classes.id, { onDelete: "cascade" }),
-  subjectId: uuid("subject_id")
-    .notNull()
-    .references(() => subjects.id, { onDelete: "cascade" }),
   date: date("date").notNull(),
   status: attendanceStatusEnum("status").notNull(),
   notes: text("notes"),
@@ -189,8 +183,7 @@ export const usersRelations = relations(users, ({ many }) => ({
 }));
 
 export const subjectsRelations = relations(subjects, ({ many }) => ({
-  teacherAssignments: many(teacherSubjectClass),
-  studentAttendance: many(studentAttendance),
+  // No more teacher assignments since we're class-based
 }));
 
 export const teachersRelations = relations(teachers, ({ one, many }) => ({
@@ -198,29 +191,25 @@ export const teachersRelations = relations(teachers, ({ one, many }) => ({
     fields: [teachers.userId],
     references: [users.id],
   }),
-  teacherAssignments: many(teacherSubjectClass),
+  classAssignments: many(teacherClass),
   attendance: many(teacherAttendance),
 }));
 
 export const classesRelations = relations(classes, ({ many }) => ({
-  teacherAssignments: many(teacherSubjectClass),
+  teacherClassAssignments: many(teacherClass),
   students: many(students),
   studentAttendance: many(studentAttendance),
 }));
 
-export const teacherSubjectClassRelations = relations(
-  teacherSubjectClass,
+export const teacherClassRelations = relations(
+  teacherClass,
   ({ one }) => ({
     teacher: one(teachers, {
-      fields: [teacherSubjectClass.teacherId],
+      fields: [teacherClass.teacherId],
       references: [teachers.id],
     }),
-    subject: one(subjects, {
-      fields: [teacherSubjectClass.subjectId],
-      references: [subjects.id],
-    }),
     class: one(classes, {
-      fields: [teacherSubjectClass.classId],
+      fields: [teacherClass.classId],
       references: [classes.id],
     }),
   })
@@ -255,10 +244,6 @@ export const studentAttendanceRelations = relations(
       fields: [studentAttendance.classId],
       references: [classes.id],
     }),
-    subject: one(subjects, {
-      fields: [studentAttendance.subjectId],
-      references: [subjects.id],
-    }),
     markedBy: one(users, {
       fields: [studentAttendance.markedBy],
       references: [users.id],
@@ -275,8 +260,8 @@ export type Teacher = typeof teachers.$inferSelect;
 export type NewTeacher = typeof teachers.$inferInsert;
 export type Class = typeof classes.$inferSelect;
 export type NewClass = typeof classes.$inferInsert;
-export type TeacherSubjectClass = typeof teacherSubjectClass.$inferSelect;
-export type NewTeacherSubjectClass = typeof teacherSubjectClass.$inferInsert;
+export type TeacherClass = typeof teacherClass.$inferSelect;
+export type NewTeacherClass = typeof teacherClass.$inferInsert;
 export type Student = typeof students.$inferSelect;
 export type NewStudent = typeof students.$inferInsert;
 export type TeacherAttendance = typeof teacherAttendance.$inferSelect;

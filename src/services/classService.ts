@@ -1,11 +1,11 @@
-import { eq, and, like, asc } from "drizzle-orm";
+import { eq, and, like, asc, desc } from "drizzle-orm";
 
 import {
   classes,
   students,
-  teacherSubjectClass,
-  subjects,
   teachers,
+  teacherClass,
+  users,
 } from "@/db/schema";
 import { db } from "@/db";
 import type { NewClass } from "@/db/schema";
@@ -221,31 +221,23 @@ export class ClassService {
   static async getWithTeachers(classId: string) {
     const result = await db
       .select({
-        id: teacherSubjectClass.id,
-        teacherId: teacherSubjectClass.teacherId,
-        subjectId: teacherSubjectClass.subjectId,
-        classId: teacherSubjectClass.classId,
-        isPrimaryTeacher: teacherSubjectClass.isPrimaryTeacher,
-        isActive: teacherSubjectClass.isActive,
-        createdAt: teacherSubjectClass.createdAt,
-        updatedAt: teacherSubjectClass.updatedAt,
+        id: teacherClass.id,
+        teacherId: teacherClass.teacherId,
+        classId: teacherClass.classId,
+        isPrimaryTeacher: teacherClass.isPrimaryTeacher,
+        isActive: teacherClass.isActive,
+        createdAt: teacherClass.createdAt,
+        updatedAt: teacherClass.updatedAt,
         teacher: {
           id: teachers.id,
           employeeId: teachers.employeeId,
           department: teachers.department,
           phone: teachers.phone,
         },
-        subject: {
-          id: subjects.id,
-          name: subjects.name,
-          code: subjects.code,
-          description: subjects.description,
-        },
       })
-      .from(teacherSubjectClass)
-      .leftJoin(teachers, eq(teacherSubjectClass.teacherId, teachers.id))
-      .leftJoin(subjects, eq(teacherSubjectClass.subjectId, subjects.id))
-      .where(eq(teacherSubjectClass.classId, classId));
+      .from(teacherClass)
+      .leftJoin(teachers, eq(teacherClass.teacherId, teachers.id))
+      .where(eq(teacherClass.classId, classId));
 
     return result;
   }
@@ -288,12 +280,12 @@ export class ClassService {
         .where(and(eq(students.classId, classId), eq(students.isActive, true)))
         .then(result => result.length),
       db
-        .select({ count: teacherSubjectClass.id })
-        .from(teacherSubjectClass)
+        .select({ count: teacherClass.id })
+        .from(teacherClass)
         .where(
           and(
-            eq(teacherSubjectClass.classId, classId),
-            eq(teacherSubjectClass.isActive, true)
+            eq(teacherClass.classId, classId),
+            eq(teacherClass.isActive, true)
           )
         )
         .then(result => result.length),

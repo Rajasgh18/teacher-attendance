@@ -1,11 +1,11 @@
 import { eq, and, like, asc } from "drizzle-orm";
 
 import {
-  students,
-  classes,
-  studentAttendance,
-  subjects,
   users,
+  classes,
+  students,
+  subjects,
+  studentAttendance,
 } from "@/db/schema";
 import { db } from "@/db";
 import type { NewStudent } from "@/db/schema";
@@ -280,11 +280,10 @@ export class StudentService {
     query: {
       startDate?: string;
       endDate?: string;
-      subjectId?: string;
       classId?: string;
     } = {}
   ) {
-    const { startDate, endDate, subjectId, classId } = query;
+    const { startDate, endDate, classId } = query;
 
     let whereConditions = [eq(studentAttendance.studentId, studentId)];
 
@@ -294,10 +293,6 @@ export class StudentService {
 
     if (endDate) {
       whereConditions.push(eq(studentAttendance.date, endDate));
-    }
-
-    if (subjectId) {
-      whereConditions.push(eq(studentAttendance.subjectId, subjectId));
     }
 
     if (classId) {
@@ -311,18 +306,12 @@ export class StudentService {
         id: studentAttendance.id,
         studentId: studentAttendance.studentId,
         classId: studentAttendance.classId,
-        subjectId: studentAttendance.subjectId,
         date: studentAttendance.date,
         status: studentAttendance.status,
         notes: studentAttendance.notes,
         markedBy: studentAttendance.markedBy,
         createdAt: studentAttendance.createdAt,
         updatedAt: studentAttendance.updatedAt,
-        subject: {
-          id: subjects.id,
-          name: subjects.name,
-          code: subjects.code,
-        },
         markedByUser: {
           id: users.id,
           firstName: users.firstName,
@@ -331,7 +320,6 @@ export class StudentService {
         },
       })
       .from(studentAttendance)
-      .leftJoin(subjects, eq(studentAttendance.subjectId, subjects.id))
       .leftJoin(users, eq(studentAttendance.markedBy, users.id))
       .where(whereClause)
       .orderBy(asc(studentAttendance.date));

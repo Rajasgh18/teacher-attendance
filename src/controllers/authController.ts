@@ -7,13 +7,10 @@ import {
   sendBadRequest,
   sendUnauthorized,
 } from "@/utils/response";
-import {
-  AuthService,
-  type RegisterData,
-  type LoginCredentials,
-} from "@/services/authService";
-import { UserModel } from "@/models/UserModel";
+import { AuthService } from "@/services/authService";
+import { UserService } from "@/services/userService";
 import { asyncHandler } from "@/middleware/errorHandler";
+import { LoginCredentials, RegisterData } from "@/types";
 
 export class AuthController {
   static register = asyncHandler(async (req: Request, res: Response) => {
@@ -71,7 +68,6 @@ export class AuthController {
 
     try {
       const result = await AuthService.login(credentials);
-
       sendSuccess(
         res,
         {
@@ -139,13 +135,12 @@ export class AuthController {
 
   static getProfile = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.user?.userId;
-
     if (!userId) {
       sendUnauthorized(res, "User not authenticated");
       return;
     }
 
-    const user = await UserModel.findById(userId);
+    const user = await UserService.getById(userId);
     if (!user) {
       sendNotFound(res, "User not found");
       return;

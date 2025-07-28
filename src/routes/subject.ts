@@ -7,7 +7,7 @@ import { authenticate, adminOnly, principalOrAdmin } from "@/middleware/auth";
 const router: Router = Router();
 
 // Apply rate limiting to all subject routes
-router.use(subjectRateLimiter);
+// router.use(subjectRateLimiter);
 
 // Public routes (no authentication required)
 router.get("/active", SubjectController.getActive);

@@ -1,9 +1,10 @@
+import bcrypt from "bcryptjs";
 import { eq, and, like, asc, desc } from "drizzle-orm";
 
 import { db } from "@/db";
+import { config } from "@/config";
 import type { NewUser } from "@/db/schema";
 import { users, teachers } from "@/db/schema";
-import { UserModel } from "@/models/UserModel";
 import { NotFoundError, ConflictError } from "@/types";
 
 export class UserService {
@@ -76,7 +77,18 @@ export class UserService {
 
   // Get user by ID
   static async getById(id: string) {
-    const user = await UserModel.findById(id);
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.id, id));
 
     if (!user) {
       throw new NotFoundError("User not found");
@@ -87,7 +99,18 @@ export class UserService {
 
   // Get user by email
   static async getByEmail(email: string) {
-    const user = await UserModel.findByEmail(email);
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.email, email));
 
     if (!user) {
       throw new NotFoundError("User not found");
@@ -103,13 +126,38 @@ export class UserService {
     }
   ) {
     // Check if user with same email already exists
-    const existingUser = await UserModel.findByEmail(data.email);
+    const existingUser = await this.getByEmail(data.email).catch(() => null);
 
     if (existingUser) {
       throw new ConflictError("User with this email already exists");
     }
 
-    const user = await UserModel.create(data);
+    const { password, ...userData } = data;
+    const passwordHash = await bcrypt.hash(
+      password,
+      config.security.bcryptRounds
+    );
+
+    const [user] = await db
+      .insert(users)
+      .values({
+        ...userData,
+        passwordHash,
+      })
+      .returning({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      });
+
+    if (!user) {
+      throw new Error("Failed to create user");
+    }
+
     return user;
   }
 
@@ -121,62 +169,89 @@ export class UserService {
     >
   ) {
     // Check if user exists
-    const existingUser = await UserModel.findById(id);
-
-    if (!existingUser) {
-      throw new NotFoundError("User not found");
-    }
+    const existingUser = await this.getById(id);
 
     // If email is being updated, check for conflicts
     if (data.email && data.email !== existingUser.email) {
-      const emailConflict = await UserModel.findByEmail(data.email);
+      const emailConflict = await this.getByEmail(data.email).catch(() => null);
 
       if (emailConflict) {
         throw new ConflictError("User with this email already exists");
       }
     }
 
-    const user = await UserModel.update(id, data);
+    const [user] = await db
+      .update(users)
+      .set({
+        ...data,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id))
+      .returning({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      });
+
+    if (!user) {
+      throw new Error("Failed to update user");
+    }
+
     return user;
   }
 
   // Update user password
   static async updatePassword(id: string, newPassword: string) {
     // Check if user exists
-    const existingUser = await UserModel.findById(id);
+    await this.getById(id);
 
-    if (!existingUser) {
-      throw new NotFoundError("User not found");
-    }
+    const passwordHash = await bcrypt.hash(
+      newPassword,
+      config.security.bcryptRounds
+    );
 
-    await UserModel.updatePassword(id, newPassword);
+    await db
+      .update(users)
+      .set({
+        passwordHash,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id));
   }
 
   // Delete user (hard delete)
   static async delete(id: string): Promise<void> {
-    const existingUser = await UserModel.findById(id);
+    await this.getById(id);
 
-    if (!existingUser) {
-      throw new NotFoundError("User not found");
-    }
-
-    await UserModel.delete(id);
+    await db.delete(users).where(eq(users.id, id));
   }
 
   // Hard delete user
   static async hardDelete(id: string): Promise<void> {
-    const existingUser = await UserModel.findById(id);
+    await this.getById(id);
 
-    if (!existingUser) {
-      throw new NotFoundError("User not found");
-    }
-
-    await UserModel.delete(id);
+    await db.delete(users).where(eq(users.id, id));
   }
 
   // Get users by role
   static async getByRole(role: "admin" | "principal" | "teacher") {
-    return await UserModel.findByRole(role);
+    return db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(eq(users.role, role))
+      .orderBy(desc(users.createdAt));
   }
 
   // Get all users
@@ -227,13 +302,19 @@ export class UserService {
     userId: string,
     password: string
   ): Promise<boolean> {
-    const user = await UserModel.findById(userId);
+    const [user] = await db
+      .select({
+        id: users.id,
+        passwordHash: users.passwordHash,
+      })
+      .from(users)
+      .where(eq(users.id, userId));
 
     if (!user) {
       throw new NotFoundError("User not found");
     }
 
-    return await UserModel.verifyPassword(user, password);
+    return await bcrypt.compare(password, user.passwordHash);
   }
 
   // Change user password
@@ -242,16 +323,22 @@ export class UserService {
     currentPassword: string,
     newPassword: string
   ): Promise<void> {
-    const user = await UserModel.findById(userId);
+    const [user] = await db
+      .select({
+        id: users.id,
+        passwordHash: users.passwordHash,
+      })
+      .from(users)
+      .where(eq(users.id, userId));
 
     if (!user) {
       throw new NotFoundError("User not found");
     }
 
     // Verify current password
-    const isCurrentPasswordValid = await UserModel.verifyPassword(
-      user,
-      currentPassword
+    const isCurrentPasswordValid = await bcrypt.compare(
+      currentPassword,
+      user.passwordHash
     );
 
     if (!isCurrentPasswordValid) {
@@ -259,7 +346,18 @@ export class UserService {
     }
 
     // Update to new password
-    await UserModel.updatePassword(userId, newPassword);
+    const passwordHash = await bcrypt.hash(
+      newPassword,
+      config.security.bcryptRounds
+    );
+
+    await db
+      .update(users)
+      .set({
+        passwordHash,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
   }
 
   // Get user statistics

@@ -1,32 +1,20 @@
 import jwt from "jsonwebtoken";
 
+import {
+  RegisterData,
+  TokenPayload,
+  LoginCredentials,
+  UserWithoutPassword,
+} from "@/types";
 import { config } from "@/config";
-import type { User } from "@/db/schema";
 import { UserService } from "@/services/userService";
 
-export interface LoginCredentials {
-  email: string;
-  password: string;
-}
-
-export interface RegisterData {
-  email: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-  role: "admin" | "principal" | "teacher";
-}
-
-export interface TokenPayload {
-  userId: string;
-  email: string;
-  role: string;
-}
-
 export class AuthService {
-  static async register(
-    data: RegisterData
-  ): Promise<{ user: User; token: string; refreshToken: string }> {
+  static async register(data: RegisterData): Promise<{
+    user: UserWithoutPassword;
+    token: string;
+    refreshToken: string;
+  }> {
     // Check if user already exists
     const existingUser = await UserService.getByEmail(data.email);
     if (existingUser) {
@@ -55,9 +43,11 @@ export class AuthService {
     return { user, token, refreshToken };
   }
 
-  static async login(
-    credentials: LoginCredentials
-  ): Promise<{ user: User; token: string; refreshToken: string }> {
+  static async login(credentials: LoginCredentials): Promise<{
+    user: UserWithoutPassword;
+    token: string;
+    refreshToken: string;
+  }> {
     // Find user by email
     const user = await UserService.getByEmail(credentials.email);
     if (!user) {

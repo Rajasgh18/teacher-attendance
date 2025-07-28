@@ -1,13 +1,17 @@
 import { Router } from "express";
 
+import {
+  authenticate,
+  principalOrAdmin,
+  teacherAssignedToStudentClassOrAdmin,
+} from "@/middleware/auth";
 import { studentRateLimiter } from "@/middleware/security";
-import { authenticate, principalOrAdmin } from "@/middleware/auth";
 import { StudentController } from "@/controllers/studentController";
 
 const router: Router = Router();
 
 // Apply rate limiting to all student routes
-router.use(studentRateLimiter);
+// router.use(studentRateLimiter);
 
 // Public routes (no authentication required)
 router.get("/active", StudentController.getActive);
@@ -20,17 +24,27 @@ router.use(authenticate);
 
 // Routes accessible by principals and admins only
 router.get("/", principalOrAdmin, StudentController.getAll);
-router.get("/class/:classId", principalOrAdmin, StudentController.getByClass);
 router.get("/gender/:gender", principalOrAdmin, StudentController.getByGender);
-router.get("/:id", principalOrAdmin, StudentController.getById);
+
+// Routes accessible by teachers assigned to the class, principals, and admins
+router.get(
+  "/class/:classId",
+  teacherAssignedToStudentClassOrAdmin(),
+  StudentController.getByClass
+);
+router.get(
+  "/:id",
+  teacherAssignedToStudentClassOrAdmin(),
+  StudentController.getById
+);
 router.get(
   "/student/:studentId",
-  principalOrAdmin,
+  teacherAssignedToStudentClassOrAdmin(),
   StudentController.getByStudentId
 );
 router.get(
   "/:studentId/attendance",
-  principalOrAdmin,
+  teacherAssignedToStudentClassOrAdmin(),
   StudentController.getAttendance
 );
 

@@ -1,13 +1,17 @@
 import { Router } from "express";
 
+import {
+  authenticate,
+  principalOrAdmin,
+  teacherAssignedToClassOrAdmin,
+} from "@/middleware/auth";
 import { classRateLimiter } from "@/middleware/security";
 import { ClassController } from "@/controllers/classController";
-import { authenticate, principalOrAdmin } from "@/middleware/auth";
 
 const router: Router = Router();
 
 // Apply rate limiting to all class routes
-router.use(classRateLimiter);
+// router.use(classRateLimiter);
 
 // Public routes (no authentication required)
 router.get("/active", ClassController.getActive);
@@ -26,19 +30,29 @@ router.get(
   principalOrAdmin,
   ClassController.getByAcademicYear
 );
-router.get("/:id", principalOrAdmin, ClassController.getById);
+
+// Routes accessible by teachers assigned to the class, principals, and admins
+router.get("/:id", teacherAssignedToClassOrAdmin(), ClassController.getById);
 router.get(
   "/name/:name/grade/:grade",
   principalOrAdmin,
   ClassController.getByNameAndGrade
 );
-router.get("/:classId/students", principalOrAdmin, ClassController.getStudents);
+router.get(
+  "/:classId/students",
+  teacherAssignedToClassOrAdmin(),
+  ClassController.getStudents
+);
 router.get(
   "/:classId/teachers",
-  principalOrAdmin,
+  teacherAssignedToClassOrAdmin(),
   ClassController.getWithTeachers
 );
-router.get("/:classId/stats", principalOrAdmin, ClassController.getClassStats);
+router.get(
+  "/:classId/stats",
+  teacherAssignedToClassOrAdmin(),
+  ClassController.getClassStats
+);
 
 // Routes accessible by principals and admins only
 router.post("/", principalOrAdmin, ClassController.create);

@@ -12,7 +12,7 @@ import { UserController } from "@/controllers/userController";
 const router: Router = Router();
 
 // Apply rate limiting to all user routes
-router.use(userRateLimiter);
+// router.use(userRateLimiter);
 
 // Protected routes (authentication required)
 router.use(authenticate);

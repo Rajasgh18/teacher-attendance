@@ -229,7 +229,7 @@ export class StudentController {
   // Get student's attendance records (accessible by principals and admins)
   static getAttendance = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
-    const { startDate, endDate, subjectId, classId } = req.query;
+    const { startDate, endDate, classId } = req.query;
 
     if (!studentId) {
       sendBadRequest(res, "Student ID is required");
@@ -239,7 +239,6 @@ export class StudentController {
     const query: any = {};
     if (startDate) query.startDate = startDate as string;
     if (endDate) query.endDate = endDate as string;
-    if (subjectId) query.subjectId = subjectId as string;
     if (classId) query.classId = classId as string;
 
     const attendance = await StudentService.getAttendance(studentId, query);

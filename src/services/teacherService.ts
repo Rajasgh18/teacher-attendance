@@ -3,9 +3,8 @@ import { eq, and, like, asc } from "drizzle-orm";
 import {
   users,
   classes,
-  subjects,
   teachers,
-  teacherSubjectClass,
+  teacherClass,
 } from "@/db/schema";
 import { db } from "@/db";
 import type { NewTeacher } from "@/db/schema";
@@ -155,6 +154,40 @@ export class TeacherService {
     return result[0]!;
   }
 
+  // Get teacher by user ID
+  static async getByUserId(userId: string) {
+    const result = await db
+      .select({
+        id: teachers.id,
+        userId: teachers.userId,
+        employeeId: teachers.employeeId,
+        department: teachers.department,
+        phone: teachers.phone,
+        address: teachers.address,
+        hireDate: teachers.hireDate,
+        isActive: teachers.isActive,
+        createdAt: teachers.createdAt,
+        updatedAt: teachers.updatedAt,
+        user: {
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+        },
+      })
+      .from(teachers)
+      .leftJoin(users, eq(teachers.userId, users.id))
+      .where(eq(teachers.userId, userId))
+      .limit(1);
+
+    if (!result.length) {
+      throw new NotFoundError("Teacher not found");
+    }
+
+    return result[0]!;
+  }
+
   // Create new teacher
   static async create(
     data: Omit<NewTeacher, "id" | "createdAt" | "updatedAt">
@@ -229,24 +262,17 @@ export class TeacherService {
       .where(eq(teachers.id, id));
   }
 
-  // Get teacher's subject-class assignments
+  // Get teacher's class assignments
   static async getAssignments(teacherId: string) {
     const result = await db
       .select({
-        id: teacherSubjectClass.id,
-        teacherId: teacherSubjectClass.teacherId,
-        subjectId: teacherSubjectClass.subjectId,
-        classId: teacherSubjectClass.classId,
-        isPrimaryTeacher: teacherSubjectClass.isPrimaryTeacher,
-        isActive: teacherSubjectClass.isActive,
-        createdAt: teacherSubjectClass.createdAt,
-        updatedAt: teacherSubjectClass.updatedAt,
-        subject: {
-          id: subjects.id,
-          name: subjects.name,
-          code: subjects.code,
-          description: subjects.description,
-        },
+        id: teacherClass.id,
+        teacherId: teacherClass.teacherId,
+        classId: teacherClass.classId,
+        isPrimaryTeacher: teacherClass.isPrimaryTeacher,
+        isActive: teacherClass.isActive,
+        createdAt: teacherClass.createdAt,
+        updatedAt: teacherClass.updatedAt,
         class: {
           id: classes.id,
           name: classes.name,
@@ -255,45 +281,41 @@ export class TeacherService {
           academicYear: classes.academicYear,
         },
       })
-      .from(teacherSubjectClass)
-      .leftJoin(subjects, eq(teacherSubjectClass.subjectId, subjects.id))
-      .leftJoin(classes, eq(teacherSubjectClass.classId, classes.id))
-      .where(eq(teacherSubjectClass.teacherId, teacherId));
+      .from(teacherClass)
+      .leftJoin(classes, eq(teacherClass.classId, classes.id))
+      .where(eq(teacherClass.teacherId, teacherId));
 
     return result;
   }
 
-  // Assign teacher to subject-class
-  static async assignToSubjectClass(
+  // Assign teacher to class
+  static async assignToClass(
     teacherId: string,
-    subjectId: string,
     classId: string,
     isPrimaryTeacher: boolean = false
   ) {
     // Check if assignment already exists
     const existingAssignment = await db
       .select()
-      .from(teacherSubjectClass)
+      .from(teacherClass)
       .where(
         and(
-          eq(teacherSubjectClass.teacherId, teacherId),
-          eq(teacherSubjectClass.subjectId, subjectId),
-          eq(teacherSubjectClass.classId, classId)
+          eq(teacherClass.teacherId, teacherId),
+          eq(teacherClass.classId, classId)
         )
       )
       .limit(1);
 
     if (existingAssignment.length) {
       throw new ConflictError(
-        "Teacher is already assigned to this subject-class combination"
+        "Teacher is already assigned to this class"
       );
     }
 
     const result = await db
-      .insert(teacherSubjectClass)
+      .insert(teacherClass)
       .values({
         teacherId,
-        subjectId,
         classId,
         isPrimaryTeacher,
         isActive: true,
@@ -307,19 +329,17 @@ export class TeacherService {
     return result[0]!;
   }
 
-  // Remove teacher from subject-class assignment
-  static async removeFromSubjectClass(
+  // Remove teacher from class assignment
+  static async removeFromClass(
     teacherId: string,
-    subjectId: string,
     classId: string
   ): Promise<void> {
     const result = await db
-      .delete(teacherSubjectClass)
+      .delete(teacherClass)
       .where(
         and(
-          eq(teacherSubjectClass.teacherId, teacherId),
-          eq(teacherSubjectClass.subjectId, subjectId),
-          eq(teacherSubjectClass.classId, classId)
+          eq(teacherClass.teacherId, teacherId),
+          eq(teacherClass.classId, classId)
         )
       );
 

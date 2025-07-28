@@ -11,7 +11,7 @@ import { AuthController } from "@/controllers/authController";
 
 const router: express.Router = Router();
 
-router.use(authRateLimiter);
+// router.use(authRateLimiter);
 router.post("/register", userValidations.create, AuthController.register);
 router.post("/login", userValidations.login, AuthController.login);
 router.post(

@@ -3,8 +3,8 @@ import { Request, Response } from "express";
 import {
   sendSuccess,
   sendCreated,
-  sendNotFound,
   sendBadRequest,
+  sendUnauthorized,
 } from "@/utils/response";
 import { asyncHandler } from "@/middleware/errorHandler";
 import { TeacherService } from "@/services/teacherService";
@@ -177,31 +177,57 @@ export class TeacherController {
       return;
     }
 
-    const assignments = await TeacherService.getAssignments(teacherId);
-    sendSuccess(res, assignments, "Teacher assignments retrieved successfully");
+    // For admin and principal, they can access any teacher's assignments
+    if (req.user?.role === "admin" || req.user?.role === "principal") {
+      const assignments = await TeacherService.getAssignments(teacherId);
+      sendSuccess(
+        res,
+        assignments,
+        "Teacher assignments retrieved successfully"
+      );
+      return;
+    }
+
+    // For teachers, they can only access their own assignments
+    if (req.user?.role === "teacher") {
+      const teacher = await TeacherService.getByUserId(req.user.userId);
+
+      if (teacher.id.toString() !== teacherId.toString()) {
+        sendUnauthorized(res, "You are not authorized to access this resource");
+        return;
+      }
+
+      const assignments = await TeacherService.getAssignments(teacherId);
+      sendSuccess(
+        res,
+        assignments,
+        "Teacher assignments retrieved successfully"
+      );
+      return;
+    }
+
+    sendUnauthorized(res, "You are not authorized to access this resource");
   });
 
-  // Assign teacher to subject-class (admin and principal only)
-  static assignToSubjectClass = asyncHandler(
+  // Assign teacher to class (admin and principal only)
+  static assignToClass = asyncHandler(
     async (req: Request, res: Response) => {
       const {
         teacherId,
-        subjectId,
         classId,
         isPrimaryTeacher = false,
       } = req.body;
 
-      if (!teacherId || !subjectId || !classId) {
+      if (!teacherId || !classId) {
         sendBadRequest(
           res,
-          "Teacher ID, Subject ID, and Class ID are required"
+          "Teacher ID and Class ID are required"
         );
         return;
       }
 
-      const assignment = await TeacherService.assignToSubjectClass(
+      const assignment = await TeacherService.assignToClass(
         teacherId,
-        subjectId,
         classId,
         isPrimaryTeacher
       );
@@ -209,33 +235,32 @@ export class TeacherController {
       sendCreated(
         res,
         assignment,
-        "Teacher assigned to subject-class successfully"
+        "Teacher assigned to class successfully"
       );
     }
   );
 
-  // Remove teacher from subject-class assignment (admin and principal only)
-  static removeFromSubjectClass = asyncHandler(
+  // Remove teacher from class assignment (admin and principal only)
+  static removeFromClass = asyncHandler(
     async (req: Request, res: Response) => {
-      const { teacherId, subjectId, classId } = req.body;
+      const { teacherId, classId } = req.body;
 
-      if (!teacherId || !subjectId || !classId) {
+      if (!teacherId || !classId) {
         sendBadRequest(
           res,
-          "Teacher ID, Subject ID, and Class ID are required"
+          "Teacher ID and Class ID are required"
         );
         return;
       }
 
-      await TeacherService.removeFromSubjectClass(
+      await TeacherService.removeFromClass(
         teacherId,
-        subjectId,
         classId
       );
       sendSuccess(
         res,
         null,
-        "Teacher removed from subject-class assignment successfully"
+        "Teacher removed from class assignment successfully"
       );
     }
   );
@@ -263,16 +288,7 @@ export class TeacherController {
     }
 
     // Find teacher by userId
-    const result = await TeacherService.getAll({
-      limit: 1,
-      search: userId, // This will search in employeeId, but we need to modify the service
-    });
-
-    if (!result.data.length) {
-      sendNotFound(res, "Teacher profile not found");
-      return;
-    }
-
-    sendSuccess(res, result.data[0], "Teacher profile retrieved successfully");
+    const teacher = await TeacherService.getByUserId(userId);
+    sendSuccess(res, teacher, "Teacher profile retrieved successfully");
   });
 }

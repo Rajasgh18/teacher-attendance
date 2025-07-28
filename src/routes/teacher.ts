@@ -7,13 +7,14 @@ import { TeacherController } from "@/controllers/teacherController";
 const router: Router = Router();
 
 // Apply rate limiting to all teacher routes
-router.use(teacherRateLimiter);
+// router.use(teacherRateLimiter);
 
 // Protected routes (authentication required)
 router.use(authenticate);
 
 // Routes accessible by all authenticated users (teachers, principals, admins)
 router.get("/profile", TeacherController.getProfile);
+router.get("/:teacherId/assignments", TeacherController.getAssignments);
 
 // Routes accessible by principals and admins only
 router.get("/", principalOrAdmin, TeacherController.getAll);
@@ -28,11 +29,6 @@ router.get(
   principalOrAdmin,
   TeacherController.getByEmployeeId
 );
-router.get(
-  "/:teacherId/assignments",
-  principalOrAdmin,
-  TeacherController.getAssignments
-);
 
 // Routes accessible by principals and admins only
 router.post("/", principalOrAdmin, TeacherController.create);
@@ -41,17 +37,9 @@ router.put("/:id", principalOrAdmin, TeacherController.update);
 
 router.delete("/:id", principalOrAdmin, TeacherController.delete);
 
-// Teacher-subject-class assignment routes (admin and principal only)
-router.post(
-  "/assign",
-  principalOrAdmin,
-  TeacherController.assignToSubjectClass
-);
+// Teacher-class assignment routes (admin and principal only)
+router.post("/assign", principalOrAdmin, TeacherController.assignToClass);
 
-router.delete(
-  "/unassign",
-  principalOrAdmin,
-  TeacherController.removeFromSubjectClass
-);
+router.post("/remove", principalOrAdmin, TeacherController.removeFromClass);
 
 export default router;

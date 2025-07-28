@@ -21,7 +21,7 @@ app.set("trust proxy", 1);
 
 // Security middleware
 app.use(helmetConfig);
-app.use(rateLimiter);
+// app.use(rateLimiter);
 app.use(requestId);
 app.use(requestLogger);
 app.use(securityMiddleware);

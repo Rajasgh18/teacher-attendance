@@ -207,3 +207,33 @@ export interface RateLimitConfig {
   maxRequests: number;
   message: string;
 }
+
+// Type for user without password hash (for security)
+export type UserWithoutPassword = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: "admin" | "principal" | "teacher";
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface RegisterData {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: "admin" | "principal" | "teacher";
+}
+
+export interface TokenPayload {
+  userId: string;
+  email: string;
+  role: string;
+}

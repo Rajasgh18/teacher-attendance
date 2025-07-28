@@ -149,6 +149,144 @@ export const selfOrAdmin = (userIdField: string = "userId") => {
   };
 };
 
+// Teacher assigned to class or admin/principal middleware
+export const teacherAssignedToClassOrAdmin = () => {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    if (!req.user) {
+      throw new AuthenticationError("Authentication required");
+    }
+
+    // Admin and principal can access all classes
+    if (
+      req.user.role === UserRole.ADMIN ||
+      req.user.role === UserRole.PRINCIPAL
+    ) {
+      return next();
+    }
+
+    // For teachers, check if they are assigned to the class
+    if (req.user.role === UserRole.TEACHER) {
+      const classId = req.params.id || req.params.classId;
+
+      if (!classId) {
+        throw new AuthorizationError("Class ID is required");
+      }
+
+      try {
+        // Import here to avoid circular dependencies
+        const { TeacherService } = await import("@/services/teacherService");
+
+        // Get teacher profile
+        const teacher = await TeacherService.getByUserId(req.user.userId);
+
+        // Check if teacher is assigned to this class
+        const assignments = await TeacherService.getAssignments(teacher.id);
+        const isAssigned = assignments.some(
+          assignment => assignment.classId === classId
+        );
+
+        if (!isAssigned) {
+          throw new AuthorizationError(
+            "Access denied. You are not assigned to this class."
+          );
+        }
+
+        next();
+      } catch (error) {
+        if (error instanceof AuthorizationError) {
+          throw error;
+        }
+        throw new AuthorizationError("Failed to verify class assignment");
+      }
+    } else {
+      throw new AuthorizationError(
+        "Access denied. Required roles: teacher, principal, admin"
+      );
+    }
+  };
+};
+
+// Teacher assigned to student's class or admin/principal middleware
+export const teacherAssignedToStudentClassOrAdmin = () => {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    if (!req.user) {
+      throw new AuthenticationError("Authentication required");
+    }
+
+    // Admin and principal can access all students
+    if (
+      req.user.role === UserRole.ADMIN ||
+      req.user.role === UserRole.PRINCIPAL
+    ) {
+      return next();
+    }
+
+    // For teachers, check if they are assigned to the student's class
+    if (req.user.role === UserRole.TEACHER) {
+      const studentId = req.params.id || req.params.studentId;
+      const classId = req.params.classId;
+
+      if (!studentId && !classId) {
+        throw new AuthorizationError("Student ID or Class ID is required");
+      }
+
+      try {
+        // Import here to avoid circular dependencies
+        const { TeacherService } = await import("@/services/teacherService");
+        const { StudentService } = await import("@/services/studentService");
+
+        // Get teacher profile
+        const teacher = await TeacherService.getByUserId(req.user.userId);
+
+        // Check if teacher is assigned to the student's class
+        const assignments = await TeacherService.getAssignments(teacher.id);
+
+        let isAssigned = false;
+
+        if (classId) {
+          // Direct class access
+          isAssigned = assignments.some(
+            assignment => assignment.classId === classId
+          );
+        } else if (studentId) {
+          // Student access - need to check student's class
+          const student = await StudentService.getById(studentId);
+          isAssigned = assignments.some(
+            assignment => assignment.classId === student.classId
+          );
+        }
+
+        if (!isAssigned) {
+          throw new AuthorizationError(
+            "Access denied. You are not assigned to this student's class."
+          );
+        }
+
+        next();
+      } catch (error) {
+        if (error instanceof AuthorizationError) {
+          throw error;
+        }
+        throw new AuthorizationError(
+          "Failed to verify student class assignment"
+        );
+      }
+    } else {
+      throw new AuthorizationError(
+        "Access denied. Required roles: teacher, principal, admin"
+      );
+    }
+  };
+};
+
 // Generate JWT token
 export const generateToken = (
   payload: Omit<JwtPayload, "iat" | "exp">
