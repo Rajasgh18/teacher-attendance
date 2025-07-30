@@ -5,7 +5,7 @@ import { db } from "@/db";
 import { config } from "@/config";
 import type { NewUser } from "@/db/schema";
 import { users, teacherClass, classes } from "@/db/schema";
-import { NotFoundError, ConflictError } from "@/types";
+import { NotFoundError, ConflictError, UserWithoutPassword } from "@/types";
 
 export class UserService {
   // Get all users with pagination and search
@@ -29,16 +29,13 @@ export class UserService {
         or(
           like(users.firstName, `%${search}%`),
           like(users.lastName, `%${search}%`),
-          like(users.email, `%${search}%`),
-          like(users.employeeId, `%${search}%`)
+          like(users.email, `%${search}%`)
         )
       );
     }
 
     if (role) {
-      whereConditions.push(
-        eq(users.role, role as "admin" | "teacher")
-      );
+      whereConditions.push(eq(users.role, role as "admin" | "teacher"));
     }
 
     if (department) {
@@ -190,15 +187,14 @@ export class UserService {
     const { page = 1, limit = 10, search, department, isActive } = query;
     const offset = (page - 1) * limit;
 
-    let whereConditions = [eq(users.role, "teacher")];
+    let whereConditions: any[] = [eq(users.role, "teacher")];
 
     if (search) {
       whereConditions.push(
         or(
           like(users.firstName, `%${search}%`),
           like(users.lastName, `%${search}%`),
-          like(users.email, `%${search}%`),
-          like(users.employeeId, `%${search}%`)
+          like(users.email, `%${search}%`)
         )
       );
     }
@@ -281,7 +277,7 @@ export class UserService {
     data: Omit<NewUser, "id" | "createdAt" | "updatedAt" | "passwordHash"> & {
       password: string;
     }
-  ) {
+  ): Promise<UserWithoutPassword> {
     const { password, ...userData } = data;
 
     // Check if user already exists
@@ -332,7 +328,11 @@ export class UserService {
         updatedAt: users.updatedAt,
       });
 
-    return newUser;
+    if (!newUser) {
+      throw new Error("Failed to create user");
+    }
+
+    return newUser as UserWithoutPassword;
   }
 
   // Update user
@@ -511,7 +511,12 @@ export class UserService {
     const existingAssignment = await db
       .select({ id: teacherClass.id })
       .from(teacherClass)
-      .where(and(eq(teacherClass.teacherId, teacherId), eq(teacherClass.classId, classId)));
+      .where(
+        and(
+          eq(teacherClass.teacherId, teacherId),
+          eq(teacherClass.classId, classId)
+        )
+      );
 
     if (existingAssignment.length > 0) {
       throw new ConflictError("Teacher is already assigned to this class");
@@ -537,7 +542,12 @@ export class UserService {
   ): Promise<void> {
     await db
       .delete(teacherClass)
-      .where(and(eq(teacherClass.teacherId, teacherId), eq(teacherClass.classId, classId)));
+      .where(
+        and(
+          eq(teacherClass.teacherId, teacherId),
+          eq(teacherClass.classId, classId)
+        )
+      );
   }
 
   // Verify password
@@ -596,7 +606,10 @@ export class UserService {
   // Get user statistics
   static async getUserStats() {
     const [totalUsers, totalTeachers, totalAdmins] = await Promise.all([
-      db.select({ count: users.id }).from(users).then(result => result.length),
+      db
+        .select({ count: users.id })
+        .from(users)
+        .then(result => result.length),
       db
         .select({ count: users.id })
         .from(users)
@@ -637,8 +650,7 @@ export class UserService {
         or(
           like(users.firstName, `%${searchTerm}%`),
           like(users.lastName, `%${searchTerm}%`),
-          like(users.email, `%${searchTerm}%`),
-          like(users.employeeId, `%${searchTerm}%`)
+          like(users.email, `%${searchTerm}%`)
         )
       )
       .limit(limit)

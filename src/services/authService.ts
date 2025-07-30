@@ -40,7 +40,7 @@ export class AuthService {
     const token = this.generateToken(tokenPayload);
     const refreshToken = this.generateRefreshToken(tokenPayload);
 
-    return { user, token, refreshToken };
+    return { user: user as UserWithoutPassword, token, refreshToken };
   }
 
   static async login(credentials: LoginCredentials): Promise<{
