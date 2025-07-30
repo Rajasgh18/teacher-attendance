@@ -2,7 +2,8 @@ import { Router } from "express";
 
 import {
   authenticate,
-  principalOrAdmin,
+  adminOnly,
+  teacherOrAdmin,
   teacherAssignedToStudentClassOrAdmin,
 } from "@/middleware/auth";
 import { StudentAttendanceController } from "@/controllers/studentAttendanceController";
@@ -12,7 +13,7 @@ const router: Router = Router();
 // Protected routes (authentication required)
 router.use(authenticate);
 
-// Routes accessible by teachers assigned to the class, principals, and admins
+// Routes accessible by teachers assigned to the class and admins
 router.get(
   "/class/:classId",
   teacherAssignedToStudentClassOrAdmin(),
@@ -31,15 +32,15 @@ router.get(
   StudentAttendanceController.getByDate
 );
 
-// Routes accessible by principals and admins only
-router.get("/", principalOrAdmin, StudentAttendanceController.getAll);
+// Routes accessible by all authenticated users (teachers, admins)
+router.get("/", teacherOrAdmin, StudentAttendanceController.getAll);
+router.get("/:id", teacherOrAdmin, StudentAttendanceController.getById);
 
-router.get("/:id", principalOrAdmin, StudentAttendanceController.getById);
+// Routes accessible by teachers assigned to the class and admins
+router.post("/", teacherAssignedToStudentClassOrAdmin(), StudentAttendanceController.create);
+router.put("/:id", teacherAssignedToStudentClassOrAdmin(), StudentAttendanceController.update);
 
-router.post("/", principalOrAdmin, StudentAttendanceController.create);
-
-router.put("/:id", principalOrAdmin, StudentAttendanceController.update);
-
-router.delete("/:id", principalOrAdmin, StudentAttendanceController.delete);
+// Routes accessible by admins only
+router.delete("/:id", adminOnly, StudentAttendanceController.delete);
 
 export default router;

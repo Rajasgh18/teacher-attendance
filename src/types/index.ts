@@ -30,7 +30,6 @@ export interface User {
 export enum UserRole {
   ADMIN = "admin",
   TEACHER = "teacher",
-  PRINCIPAL = "principal",
 }
 
 // Teacher Types
@@ -214,7 +213,7 @@ export type UserWithoutPassword = {
   email: string;
   firstName: string;
   lastName: string;
-  role: "admin" | "principal" | "teacher";
+  role: "admin" | "teacher";
   createdAt: Date;
   updatedAt: Date;
 };
@@ -229,7 +228,7 @@ export interface RegisterData {
   password: string;
   firstName: string;
   lastName: string;
-  role: "admin" | "principal" | "teacher";
+  role: "admin" | "teacher";
 }
 
 export interface TokenPayload {

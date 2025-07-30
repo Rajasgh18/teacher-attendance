@@ -5,7 +5,7 @@ import { asyncHandler } from "@/middleware/errorHandler";
 import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
 
 export class ClassController {
-  // Get all classes (accessible by principals and admins)
+  // Get all classes (accessible by teachers and admins)
   static getAll = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit, search, grade, academicYear, isActive } = req.query;
 
@@ -21,7 +21,7 @@ export class ClassController {
     sendSuccess(res, result, "Classes retrieved successfully");
   });
 
-  // Get class by ID (accessible by principals and admins)
+  // Get class by ID (accessible by teachers and admins)
   static getById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -34,7 +34,7 @@ export class ClassController {
     sendSuccess(res, classData, "Class retrieved successfully");
   });
 
-  // Get class by name and grade (accessible by principals and admins)
+  // Get class by name and grade (accessible by teachers and admins)
   static getByNameAndGrade = asyncHandler(
     async (req: Request, res: Response) => {
       const { name, grade } = req.params;
@@ -49,7 +49,7 @@ export class ClassController {
     }
   );
 
-  // Create new class (admin and principal only)
+  // Create new class (admin only)
   static create = asyncHandler(async (req: Request, res: Response) => {
     const { name, grade, section, academicYear, isActive = true } = req.body;
 
@@ -84,7 +84,7 @@ export class ClassController {
     sendCreated(res, classData, "Class created successfully");
   });
 
-  // Update class (admin and principal only)
+  // Update class (admin only)
   static update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, grade, section, academicYear, isActive } = req.body;
@@ -131,7 +131,7 @@ export class ClassController {
     sendSuccess(res, classData, "Class updated successfully");
   });
 
-  // Delete class (soft delete - admin and principal only)
+  // Delete class (soft delete - admin only)
   static delete = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -144,7 +144,7 @@ export class ClassController {
     sendSuccess(res, null, "Class deleted successfully");
   });
 
-  // Get students in a class (accessible by principals and admins)
+  // Get students in a class (accessible by teachers and admins)
   static getStudents = asyncHandler(async (req: Request, res: Response) => {
     const { classId } = req.params;
 
@@ -157,7 +157,7 @@ export class ClassController {
     sendSuccess(res, students, "Students retrieved successfully");
   });
 
-  // Get class with teacher assignments (accessible by principals and admins)
+  // Get class with teacher assignments (accessible by teachers and admins)
   static getWithTeachers = asyncHandler(async (req: Request, res: Response) => {
     const { classId } = req.params;
 
@@ -170,7 +170,7 @@ export class ClassController {
     sendSuccess(res, teachers, "Class teachers retrieved successfully");
   });
 
-  // Get classes by grade (accessible by principals and admins)
+  // Get classes by grade (accessible by teachers and admins)
   static getByGrade = asyncHandler(async (req: Request, res: Response) => {
     const { grade } = req.params;
 
@@ -183,7 +183,7 @@ export class ClassController {
     sendSuccess(res, classes, "Classes retrieved successfully");
   });
 
-  // Get classes by academic year (accessible by principals and admins)
+  // Get classes by academic year (accessible by teachers and admins)
   static getByAcademicYear = asyncHandler(
     async (req: Request, res: Response) => {
       const { academicYear } = req.params;
@@ -204,7 +204,7 @@ export class ClassController {
     sendSuccess(res, classes, "Active classes retrieved successfully");
   });
 
-  // Get class statistics (accessible by principals and admins)
+  // Get class statistics (accessible by teachers and admins)
   static getClassStats = asyncHandler(async (req: Request, res: Response) => {
     const { classId } = req.params;
 

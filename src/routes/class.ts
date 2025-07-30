@@ -2,7 +2,8 @@ import { Router } from "express";
 
 import {
   authenticate,
-  principalOrAdmin,
+  adminOnly,
+  teacherOrAdmin,
   teacherAssignedToClassOrAdmin,
 } from "@/middleware/auth";
 import { classRateLimiter } from "@/middleware/security";
@@ -19,23 +20,20 @@ router.get("/active", ClassController.getActive);
 // Protected routes (authentication required)
 router.use(authenticate);
 
-// Routes accessible by all authenticated users (teachers, principals, admins)
-// (No specific routes for all users in class management)
-
-// Routes accessible by principals and admins only
-router.get("/", principalOrAdmin, ClassController.getAll);
-router.get("/grade/:grade", principalOrAdmin, ClassController.getByGrade);
+// Routes accessible by all authenticated users (teachers, admins)
+router.get("/", teacherOrAdmin, ClassController.getAll);
+router.get("/grade/:grade", teacherOrAdmin, ClassController.getByGrade);
 router.get(
   "/academic-year/:academicYear",
-  principalOrAdmin,
+  teacherOrAdmin,
   ClassController.getByAcademicYear
 );
 
-// Routes accessible by teachers assigned to the class, principals, and admins
+// Routes accessible by teachers assigned to the class and admins
 router.get("/:id", teacherAssignedToClassOrAdmin(), ClassController.getById);
 router.get(
   "/name/:name/grade/:grade",
-  principalOrAdmin,
+  teacherOrAdmin,
   ClassController.getByNameAndGrade
 );
 router.get(
@@ -54,11 +52,9 @@ router.get(
   ClassController.getClassStats
 );
 
-// Routes accessible by principals and admins only
-router.post("/", principalOrAdmin, ClassController.create);
-
-router.put("/:id", principalOrAdmin, ClassController.update);
-
-router.delete("/:id", principalOrAdmin, ClassController.delete);
+// Routes accessible by admins only
+router.post("/", adminOnly, ClassController.create);
+router.put("/:id", adminOnly, ClassController.update);
+router.delete("/:id", adminOnly, ClassController.delete);
 
 export default router;

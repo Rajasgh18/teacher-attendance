@@ -2,7 +2,6 @@ import { db } from "./index";
 import {
   users,
   classes,
-  teachers,
   students,
   subjects,
   teacherClass,
@@ -41,11 +40,10 @@ export async function seed() {
     await db.delete(teacherClass);
     await db.delete(students);
     await db.delete(classes);
-    await db.delete(teachers);
     await db.delete(subjects);
     await db.delete(users);
 
-    // 1. Create Users
+    // 1. Create Users (including teachers)
     console.log("👥 Creating users...");
     const userData = [
       {
@@ -54,13 +52,12 @@ export async function seed() {
         role: "admin" as const,
         firstName: "Admin",
         lastName: "User",
-      },
-      {
-        email: "principal@school.com",
-        passwordHash: await hashPassword("principal123"),
-        role: "principal" as const,
-        firstName: "John",
-        lastName: "Principal",
+        employeeId: null,
+        department: null,
+        phone: null,
+        address: null,
+        hireDate: null,
+        isActive: true,
       },
       {
         email: "sarah.johnson@school.com",
@@ -68,6 +65,12 @@ export async function seed() {
         role: "teacher" as const,
         firstName: "Sarah",
         lastName: "Johnson",
+        employeeId: "T001",
+        department: "Mathematics",
+        phone: "+1-555-0101",
+        address: "123 Teacher Street, Education City, EC 12345",
+        hireDate: "2020-08-15",
+        isActive: true,
       },
       {
         email: "michael.chen@school.com",
@@ -75,6 +78,12 @@ export async function seed() {
         role: "teacher" as const,
         firstName: "Michael",
         lastName: "Chen",
+        employeeId: "T002",
+        department: "Physics",
+        phone: "+1-555-0102",
+        address: "456 Science Avenue, Education City, EC 12345",
+        hireDate: "2019-03-10",
+        isActive: true,
       },
       {
         email: "emily.davis@school.com",
@@ -82,6 +91,12 @@ export async function seed() {
         role: "teacher" as const,
         firstName: "Emily",
         lastName: "Davis",
+        employeeId: "T003",
+        department: "English",
+        phone: "+1-555-0103",
+        address: "789 Literature Lane, Education City, EC 12345",
+        hireDate: "2021-01-20",
+        isActive: true,
       },
       {
         email: "david.wilson@school.com",
@@ -89,11 +104,20 @@ export async function seed() {
         role: "teacher" as const,
         firstName: "David",
         lastName: "Wilson",
+        employeeId: "T004",
+        department: "Computer Science",
+        phone: "+1-555-0104",
+        address: "321 Tech Road, Education City, EC 12345",
+        hireDate: "2018-09-05",
+        isActive: true,
       },
     ];
 
     const createdUsers = await db.insert(users).values(userData).returning();
     console.log(`✅ Created ${createdUsers.length} users`);
+
+    // Get teacher users for assignments
+    const teacherUsers = createdUsers.filter(user => user.role === "teacher");
 
     // 2. Create Subjects
     console.log("📚 Creating subjects...");
@@ -157,54 +181,9 @@ export async function seed() {
       .returning();
     console.log(`✅ Created ${createdSubjects.length} subjects`);
 
-    // 3. Create Teachers
-    console.log("👨‍🏫 Creating teachers...");
-    const teacherData = [
-      {
-        userId: createdUsers[2]!.id, // Sarah Johnson
-        employeeId: "T001",
-        department: "Mathematics",
-        phone: "+1-555-0101",
-        address: "123 Teacher Street, Education City, EC 12345",
-        hireDate: "2020-08-15",
-        isActive: true,
-      },
-      {
-        userId: createdUsers[3]!.id, // Michael Chen
-        employeeId: "T002",
-        department: "Physics",
-        phone: "+1-555-0102",
-        address: "456 Science Avenue, Education City, EC 12345",
-        hireDate: "2019-03-10",
-        isActive: true,
-      },
-      {
-        userId: createdUsers[4]!.id, // Emily Davis
-        employeeId: "T003",
-        department: "English",
-        phone: "+1-555-0103",
-        address: "789 Literature Lane, Education City, EC 12345",
-        hireDate: "2021-01-20",
-        isActive: true,
-      },
-      {
-        userId: createdUsers[5]!.id, // David Wilson
-        employeeId: "T004",
-        department: "Computer Science",
-        phone: "+1-555-0104",
-        address: "321 Tech Road, Education City, EC 12345",
-        hireDate: "2018-09-05",
-        isActive: true,
-      },
-    ];
+    // 3. Create Classes
 
-    const createdTeachers = await db
-      .insert(teachers)
-      .values(teacherData)
-      .returning();
-    console.log(`✅ Created ${createdTeachers.length} teachers`);
-
-    // 4. Create Classes
+    // 3. Create Classes
     console.log("🏫 Creating classes...");
     const classData = [
       {
@@ -243,30 +222,30 @@ export async function seed() {
       .returning();
     console.log(`✅ Created ${createdClasses.length} classes`);
 
-    // 5. Create Teacher-Class Assignments
+    // 4. Create Teacher-Class Assignments
     console.log("👨‍🏫🏫 Creating teacher-class assignments...");
     const teacherClassData = [
       // Primary assignments (main teachers for each class)
       {
-        teacherId: createdTeachers[0]!.id, // Sarah Johnson
+        teacherId: teacherUsers[0]!.id, // Sarah Johnson
         classId: createdClasses[0]!.id, // Mathematics 101
         isPrimaryTeacher: true,
         isActive: true,
       },
       {
-        teacherId: createdTeachers[1]!.id, // Michael Chen
+        teacherId: teacherUsers[1]!.id, // Michael Chen
         classId: createdClasses[1]!.id, // Physics Advanced
         isPrimaryTeacher: true,
         isActive: true,
       },
       {
-        teacherId: createdTeachers[2]!.id, // Emily Davis
+        teacherId: teacherUsers[2]!.id, // Emily Davis
         classId: createdClasses[2]!.id, // English Literature
         isPrimaryTeacher: true,
         isActive: true,
       },
       {
-        teacherId: createdTeachers[3]!.id, // David Wilson
+        teacherId: teacherUsers[3]!.id, // David Wilson
         classId: createdClasses[3]!.id, // Computer Science
         isPrimaryTeacher: true,
         isActive: true,
@@ -274,25 +253,25 @@ export async function seed() {
 
       // Additional assignments (teachers teaching multiple classes)
       {
-        teacherId: createdTeachers[0]!.id, // Sarah Johnson - also teaches Physics Advanced
+        teacherId: teacherUsers[0]!.id, // Sarah Johnson - also teaches Physics Advanced
         classId: createdClasses[1]!.id, // Physics Advanced
         isPrimaryTeacher: false,
         isActive: true,
       },
       {
-        teacherId: createdTeachers[1]!.id, // Michael Chen - also teaches Mathematics 101
+        teacherId: teacherUsers[1]!.id, // Michael Chen - also teaches Mathematics 101
         classId: createdClasses[0]!.id, // Mathematics 101
         isPrimaryTeacher: false,
         isActive: true,
       },
       {
-        teacherId: createdTeachers[2]!.id, // Emily Davis - also teaches Computer Science
+        teacherId: teacherUsers[2]!.id, // Emily Davis - also teaches Computer Science
         classId: createdClasses[3]!.id, // Computer Science
         isPrimaryTeacher: false,
         isActive: true,
       },
       {
-        teacherId: createdTeachers[3]!.id, // David Wilson - also teaches English Literature
+        teacherId: teacherUsers[3]!.id, // David Wilson - also teaches English Literature
         classId: createdClasses[2]!.id, // English Literature
         isPrimaryTeacher: false,
         isActive: true,
@@ -307,7 +286,7 @@ export async function seed() {
       `✅ Created ${createdTeacherClass.length} teacher-class assignments`
     );
 
-    // 6. Create Students
+    // 5. Create Students
     console.log("👨‍🎓 Creating students...");
     const studentData = [
       // Mathematics 101 Students
@@ -505,7 +484,7 @@ export async function seed() {
       .returning();
     console.log(`✅ Created ${createdStudents.length} students`);
 
-    // 7. Create Teacher Attendance Records (last 30 days)
+    // 6. Create Teacher Attendance Records (last 30 days)
     console.log("📊 Creating teacher attendance records...");
     const teacherAttendanceData = [];
     const today = new Date();
@@ -517,13 +496,8 @@ export async function seed() {
       // Skip weekends
       if (date.getDay() === 0 || date.getDay() === 6) continue;
 
-      for (const teacher of createdTeachers) {
-        const status =
-          Math.random() > 0.1
-            ? "present"
-            : Math.random() > 0.5
-              ? "late"
-              : "absent";
+      for (const teacher of teacherUsers) {
+        const status = Math.random() > 0.1 ? "present" : "absent";
         const checkIn = status === "absent" ? null : randomTime();
         const checkOut = status === "absent" ? null : randomTime();
 
@@ -540,13 +514,8 @@ export async function seed() {
           date: dateString,
           checkIn: checkIn,
           checkOut: checkOut,
-          status: status as "present" | "absent" | "late" | "half_day",
-          notes:
-            status === "late"
-              ? "Traffic delay"
-              : status === "absent"
-                ? "Sick leave"
-                : null,
+          status: status as "present" | "absent",
+          notes: status === "absent" ? "Sick leave" : null,
         });
       }
     }
@@ -556,7 +525,7 @@ export async function seed() {
       `✅ Created ${teacherAttendanceData.length} teacher attendance records`
     );
 
-    // 8. Create Student Attendance Records (last 30 days)
+    // 7. Create Student Attendance Records (last 30 days)
     console.log("📊 Creating student attendance records...");
     const studentAttendanceData = [];
 
@@ -568,12 +537,7 @@ export async function seed() {
       if (date.getDay() === 0 || date.getDay() === 6) continue;
 
       for (const student of createdStudents) {
-        const status =
-          Math.random() > 0.15
-            ? "present"
-            : Math.random() > 0.6
-              ? "late"
-              : "absent";
+        const status = Math.random() > 0.15 ? "present" : "absent";
 
         // Format date as YYYY-MM-DD
         const dateString =
@@ -587,13 +551,8 @@ export async function seed() {
           studentId: student.id,
           classId: student.classId,
           date: dateString,
-          status: status as "present" | "absent" | "late" | "half_day",
-          notes:
-            status === "late"
-              ? "Late arrival"
-              : status === "absent"
-                ? "Absent"
-                : null,
+          status: status as "present" | "absent",
+          notes: status === "absent" ? "Absent" : null,
           markedBy: createdUsers[2]!.id, // Sarah Johnson as default marker
         });
       }
@@ -606,9 +565,8 @@ export async function seed() {
 
     console.log("🎉 Database seeding completed successfully!");
     console.log("\n📋 Summary:");
-    console.log(`- ${createdUsers.length} users created`);
+    console.log(`- ${createdUsers.length} users created (including ${teacherUsers.length} teachers)`);
     console.log(`- ${createdSubjects.length} subjects created`);
-    console.log(`- ${createdTeachers.length} teachers created`);
     console.log(`- ${createdClasses.length} classes created`);
     console.log(
       `- ${createdTeacherClass.length} teacher-class assignments created`
@@ -628,7 +586,7 @@ export async function seed() {
 
     console.log("\n👨‍🏫🏫 Teacher-Class Assignments:");
     createdTeacherClass.forEach((assignment: any, index: number) => {
-      const teacher = createdTeachers.find(t => t.id === assignment.teacherId);
+      const teacher = teacherUsers.find(t => t.id === assignment.teacherId);
       const class_ = createdClasses.find(c => c.id === assignment.classId);
       const role = assignment.isPrimaryTeacher ? "Primary" : "Additional";
       console.log(
@@ -638,7 +596,7 @@ export async function seed() {
 
     console.log("\n🔑 Default Login Credentials:");
     console.log("Admin: admin@school.com / admin123");
-    console.log("Principal: principal@school.com / principal123");
+
     console.log("Teacher: sarah.johnson@school.com / teacher123");
   } catch (error) {
     console.error("❌ Error seeding database:", error);

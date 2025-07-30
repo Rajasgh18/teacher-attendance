@@ -5,7 +5,7 @@ import { StudentService } from "@/services/studentService";
 import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
 
 export class StudentController {
-  // Get all students (accessible by principals and admins)
+  // Get all students (accessible by teachers and admins)
   static getAll = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit, search, classId, gender, isActive } = req.query;
 
@@ -21,7 +21,7 @@ export class StudentController {
     sendSuccess(res, result, "Students retrieved successfully");
   });
 
-  // Get student by ID (accessible by principals and admins)
+  // Get student by ID (accessible by teachers and admins)
   static getById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -34,7 +34,7 @@ export class StudentController {
     sendSuccess(res, student, "Student retrieved successfully");
   });
 
-  // Get student by student ID (accessible by principals and admins)
+  // Get student by student ID (accessible by teachers and admins)
   static getByStudentId = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
 
@@ -47,7 +47,7 @@ export class StudentController {
     sendSuccess(res, student, "Student retrieved successfully");
   });
 
-  // Create new student (admin and principal only)
+  // Create new student (admin only)
   static create = asyncHandler(async (req: Request, res: Response) => {
     const {
       studentId,
@@ -123,7 +123,7 @@ export class StudentController {
     sendCreated(res, student, "Student created successfully");
   });
 
-  // Update student (admin and principal only)
+  // Update student (admin only)
   static update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const {
@@ -213,7 +213,7 @@ export class StudentController {
     sendSuccess(res, student, "Student updated successfully");
   });
 
-  // Delete student (soft delete - admin and principal only)
+  // Delete student (soft delete - admin only)
   static delete = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -226,7 +226,7 @@ export class StudentController {
     sendSuccess(res, null, "Student deleted successfully");
   });
 
-  // Get student's attendance records (accessible by principals and admins)
+  // Get student's attendance records (accessible by teachers and admins)
   static getAttendance = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
     const { startDate, endDate, classId } = req.query;
@@ -245,7 +245,7 @@ export class StudentController {
     sendSuccess(res, attendance, "Student attendance retrieved successfully");
   });
 
-  // Get students by class (accessible by principals and admins)
+  // Get students by class (accessible by teachers and admins)
   static getByClass = asyncHandler(async (req: Request, res: Response) => {
     const { classId } = req.params;
 
@@ -258,7 +258,7 @@ export class StudentController {
     sendSuccess(res, students, "Students retrieved successfully");
   });
 
-  // Get students by gender (accessible by principals and admins)
+  // Get students by gender (accessible by teachers and admins)
   static getByGender = asyncHandler(async (req: Request, res: Response) => {
     const { gender } = req.params;
 

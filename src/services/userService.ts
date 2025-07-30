@@ -1,10 +1,10 @@
 import bcrypt from "bcryptjs";
-import { eq, and, like, asc, desc } from "drizzle-orm";
+import { eq, and, like, asc, desc, or, ne } from "drizzle-orm";
 
 import { db } from "@/db";
 import { config } from "@/config";
 import type { NewUser } from "@/db/schema";
-import { users, teachers } from "@/db/schema";
+import { users, teacherClass, classes } from "@/db/schema";
 import { NotFoundError, ConflictError } from "@/types";
 
 export class UserService {
@@ -15,27 +15,38 @@ export class UserService {
       limit?: number;
       search?: string;
       role?: string;
+      department?: string;
+      isActive?: boolean;
     } = {}
   ) {
-    const { page = 1, limit = 10, search, role } = query;
+    const { page = 1, limit = 10, search, role, department, isActive } = query;
     const offset = (page - 1) * limit;
 
     let whereConditions = [];
 
     if (search) {
       whereConditions.push(
-        and(
+        or(
           like(users.firstName, `%${search}%`),
           like(users.lastName, `%${search}%`),
-          like(users.email, `%${search}%`)
+          like(users.email, `%${search}%`),
+          like(users.employeeId, `%${search}%`)
         )
       );
     }
 
     if (role) {
       whereConditions.push(
-        eq(users.role, role as "admin" | "principal" | "teacher")
+        eq(users.role, role as "admin" | "teacher")
       );
+    }
+
+    if (department) {
+      whereConditions.push(eq(users.department, department));
+    }
+
+    if (isActive !== undefined) {
+      whereConditions.push(eq(users.isActive, isActive));
     }
 
     const whereClause =
@@ -49,6 +60,12 @@ export class UserService {
           firstName: users.firstName,
           lastName: users.lastName,
           role: users.role,
+          employeeId: users.employeeId,
+          department: users.department,
+          phone: users.phone,
+          address: users.address,
+          hireDate: users.hireDate,
+          isActive: users.isActive,
           createdAt: users.createdAt,
           updatedAt: users.updatedAt,
         })
@@ -84,6 +101,12 @@ export class UserService {
         firstName: users.firstName,
         lastName: users.lastName,
         role: users.role,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -106,6 +129,13 @@ export class UserService {
         firstName: users.firstName,
         lastName: users.lastName,
         role: users.role,
+        passwordHash: users.passwordHash,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
@@ -119,26 +149,168 @@ export class UserService {
     return user;
   }
 
+  // Get teacher by employee ID
+  static async getByEmployeeId(employeeId: string) {
+    const [user] = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(and(eq(users.employeeId, employeeId), eq(users.role, "teacher")));
+
+    if (!user) {
+      throw new NotFoundError("Teacher not found");
+    }
+
+    return user;
+  }
+
+  // Get all teachers
+  static async getAllTeachers(
+    query: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      department?: string;
+      isActive?: boolean;
+    } = {}
+  ) {
+    const { page = 1, limit = 10, search, department, isActive } = query;
+    const offset = (page - 1) * limit;
+
+    let whereConditions = [eq(users.role, "teacher")];
+
+    if (search) {
+      whereConditions.push(
+        or(
+          like(users.firstName, `%${search}%`),
+          like(users.lastName, `%${search}%`),
+          like(users.email, `%${search}%`),
+          like(users.employeeId, `%${search}%`)
+        )
+      );
+    }
+
+    if (department) {
+      whereConditions.push(eq(users.department, department));
+    }
+
+    if (isActive !== undefined) {
+      whereConditions.push(eq(users.isActive, isActive));
+    }
+
+    const whereClause = and(...whereConditions);
+
+    const [data, totalCount] = await Promise.all([
+      db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          employeeId: users.employeeId,
+          department: users.department,
+          phone: users.phone,
+          address: users.address,
+          hireDate: users.hireDate,
+          isActive: users.isActive,
+          createdAt: users.createdAt,
+          updatedAt: users.updatedAt,
+        })
+        .from(users)
+        .where(whereClause)
+        .orderBy(asc(users.employeeId))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: users.id })
+        .from(users)
+        .where(whereClause)
+        .then(result => result.length),
+    ]);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    };
+  }
+
+  // Get teachers by department
+  static async getTeachersByDepartment(department: string) {
+    return await db
+      .select({
+        id: users.id,
+        email: users.email,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        role: users.role,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
+        createdAt: users.createdAt,
+        updatedAt: users.updatedAt,
+      })
+      .from(users)
+      .where(and(eq(users.department, department), eq(users.role, "teacher")))
+      .orderBy(asc(users.firstName));
+  }
+
   // Create new user
   static async create(
     data: Omit<NewUser, "id" | "createdAt" | "updatedAt" | "passwordHash"> & {
       password: string;
     }
   ) {
-    // Check if user with same email already exists
-    const existingUser = await this.getByEmail(data.email).catch(() => null);
+    const { password, ...userData } = data;
 
-    if (existingUser) {
+    // Check if user already exists
+    const existingUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.email, userData.email));
+
+    if (existingUser.length > 0) {
       throw new ConflictError("User with this email already exists");
     }
 
-    const { password, ...userData } = data;
-    const passwordHash = await bcrypt.hash(
-      password,
-      config.security.bcryptRounds
-    );
+    // Check if employee ID already exists for teachers
+    if (userData.role === "teacher" && userData.employeeId) {
+      const existingTeacher = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.employeeId, userData.employeeId));
 
-    const [user] = await db
+      if (existingTeacher.length > 0) {
+        throw new ConflictError("Teacher with this employee ID already exists");
+      }
+    }
+
+    // Hash password
+    const saltRounds = config.security.bcryptRounds;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    const [newUser] = await db
       .insert(users)
       .values({
         ...userData,
@@ -150,15 +322,17 @@ export class UserService {
         firstName: users.firstName,
         lastName: users.lastName,
         role: users.role,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       });
 
-    if (!user) {
-      throw new Error("Failed to create user");
-    }
-
-    return user;
+    return newUser;
   }
 
   // Update user
@@ -169,18 +343,40 @@ export class UserService {
     >
   ) {
     // Check if user exists
-    const existingUser = await this.getById(id);
+    const existingUser = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, id));
 
-    // If email is being updated, check for conflicts
-    if (data.email && data.email !== existingUser.email) {
-      const emailConflict = await this.getByEmail(data.email).catch(() => null);
+    if (existingUser.length === 0) {
+      throw new NotFoundError("User not found");
+    }
 
-      if (emailConflict) {
+    // Check if email is being updated and if it already exists
+    if (data.email) {
+      const emailExists = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.email, data.email), ne(users.id, id)));
+
+      if (emailExists.length > 0) {
         throw new ConflictError("User with this email already exists");
       }
     }
 
-    const [user] = await db
+    // Check if employee ID is being updated and if it already exists for teachers
+    if (data.employeeId) {
+      const employeeIdExists = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(and(eq(users.employeeId, data.employeeId), ne(users.id, id)));
+
+      if (employeeIdExists.length > 0) {
+        throw new ConflictError("Teacher with this employee ID already exists");
+      }
+    }
+
+    const [updatedUser] = await db
       .update(users)
       .set({
         ...data,
@@ -193,26 +389,23 @@ export class UserService {
         firstName: users.firstName,
         lastName: users.lastName,
         role: users.role,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       });
 
-    if (!user) {
-      throw new Error("Failed to update user");
-    }
-
-    return user;
+    return updatedUser;
   }
 
-  // Update user password
+  // Update password
   static async updatePassword(id: string, newPassword: string) {
-    // Check if user exists
-    await this.getById(id);
-
-    const passwordHash = await bcrypt.hash(
-      newPassword,
-      config.security.bcryptRounds
-    );
+    const saltRounds = config.security.bcryptRounds;
+    const passwordHash = await bcrypt.hash(newPassword, saltRounds);
 
     await db
       .update(users)
@@ -223,111 +416,155 @@ export class UserService {
       .where(eq(users.id, id));
   }
 
-  // Delete user (hard delete)
+  // Delete user (soft delete)
   static async delete(id: string): Promise<void> {
-    await this.getById(id);
-
-    await db.delete(users).where(eq(users.id, id));
+    await db
+      .update(users)
+      .set({
+        isActive: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, id));
   }
 
   // Hard delete user
   static async hardDelete(id: string): Promise<void> {
-    await this.getById(id);
-
     await db.delete(users).where(eq(users.id, id));
   }
 
   // Get users by role
-  static async getByRole(role: "admin" | "principal" | "teacher") {
-    return db
+  static async getByRole(role: "admin" | "teacher") {
+    return await db
       .select({
         id: users.id,
         email: users.email,
         firstName: users.firstName,
         lastName: users.lastName,
         role: users.role,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
       .from(users)
       .where(eq(users.role, role))
-      .orderBy(desc(users.createdAt));
+      .orderBy(asc(users.firstName));
   }
 
-  // Get all users
+  // Get all users (simplified)
   static async getAllUsers() {
-    return db
+    return await db
       .select({
         id: users.id,
         email: users.email,
         firstName: users.firstName,
         lastName: users.lastName,
         role: users.role,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .orderBy(desc(users.createdAt));
+      .orderBy(asc(users.firstName));
   }
 
-  // Get users with teacher profiles
-  static async getWithTeacherProfiles() {
-    return db
+  // Get teacher class assignments
+  static async getTeacherAssignments(teacherId: string) {
+    return await db
       .select({
-        id: users.id,
-        email: users.email,
-        firstName: users.firstName,
-        lastName: users.lastName,
-        role: users.role,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
-        teacher: {
-          id: teachers.id,
-          employeeId: teachers.employeeId,
-          department: teachers.department,
-          phone: teachers.phone,
-          address: teachers.address,
-          hireDate: teachers.hireDate,
-          isActive: teachers.isActive,
+        id: teacherClass.id,
+        classId: teacherClass.classId,
+        isPrimaryTeacher: teacherClass.isPrimaryTeacher,
+        isActive: teacherClass.isActive,
+        createdAt: teacherClass.createdAt,
+        updatedAt: teacherClass.updatedAt,
+        class: {
+          id: classes.id,
+          name: classes.name,
+          grade: classes.grade,
+          section: classes.section,
+          academicYear: classes.academicYear,
+          isActive: classes.isActive,
         },
       })
-      .from(users)
-      .leftJoin(teachers, eq(users.id, teachers.userId))
-      .where(eq(users.role, "teacher"))
-      .orderBy(desc(users.createdAt));
+      .from(teacherClass)
+      .leftJoin(classes, eq(teacherClass.classId, classes.id))
+      .where(eq(teacherClass.teacherId, teacherId));
   }
 
-  // Verify user password
+  // Assign teacher to class
+  static async assignTeacherToClass(
+    teacherId: string,
+    classId: string,
+    isPrimaryTeacher: boolean = false
+  ) {
+    // Check if assignment already exists
+    const existingAssignment = await db
+      .select({ id: teacherClass.id })
+      .from(teacherClass)
+      .where(and(eq(teacherClass.teacherId, teacherId), eq(teacherClass.classId, classId)));
+
+    if (existingAssignment.length > 0) {
+      throw new ConflictError("Teacher is already assigned to this class");
+    }
+
+    const [assignment] = await db
+      .insert(teacherClass)
+      .values({
+        teacherId,
+        classId,
+        isPrimaryTeacher,
+        isActive: true,
+      })
+      .returning();
+
+    return assignment;
+  }
+
+  // Remove teacher from class
+  static async removeTeacherFromClass(
+    teacherId: string,
+    classId: string
+  ): Promise<void> {
+    await db
+      .delete(teacherClass)
+      .where(and(eq(teacherClass.teacherId, teacherId), eq(teacherClass.classId, classId)));
+  }
+
+  // Verify password
   static async verifyPassword(
     userId: string,
     password: string
   ): Promise<boolean> {
     const [user] = await db
-      .select({
-        id: users.id,
-        passwordHash: users.passwordHash,
-      })
+      .select({ passwordHash: users.passwordHash })
       .from(users)
       .where(eq(users.id, userId));
 
     if (!user) {
-      throw new NotFoundError("User not found");
+      return false;
     }
 
-    return await bcrypt.compare(password, user.passwordHash);
+    return bcrypt.compare(password, user.passwordHash);
   }
 
-  // Change user password
+  // Change password
   static async changePassword(
     userId: string,
     currentPassword: string,
     newPassword: string
   ): Promise<void> {
     const [user] = await db
-      .select({
-        id: users.id,
-        passwordHash: users.passwordHash,
-      })
+      .select({ passwordHash: users.passwordHash })
       .from(users)
       .where(eq(users.id, userId));
 
@@ -335,7 +572,6 @@ export class UserService {
       throw new NotFoundError("User not found");
     }
 
-    // Verify current password
     const isCurrentPasswordValid = await bcrypt.compare(
       currentPassword,
       user.passwordHash
@@ -345,16 +581,13 @@ export class UserService {
       throw new Error("Current password is incorrect");
     }
 
-    // Update to new password
-    const passwordHash = await bcrypt.hash(
-      newPassword,
-      config.security.bcryptRounds
-    );
+    const saltRounds = config.security.bcryptRounds;
+    const newPasswordHash = await bcrypt.hash(newPassword, saltRounds);
 
     await db
       .update(users)
       .set({
-        passwordHash,
+        passwordHash: newPasswordHash,
         updatedAt: new Date(),
       })
       .where(eq(users.id, userId));
@@ -362,58 +595,53 @@ export class UserService {
 
   // Get user statistics
   static async getUserStats() {
-    const [totalUsers, adminCount, principalCount, teacherCount] =
-      await Promise.all([
-        db
-          .select({ count: users.id })
-          .from(users)
-          .then(result => result.length),
-        db
-          .select({ count: users.id })
-          .from(users)
-          .where(eq(users.role, "admin"))
-          .then(result => result.length),
-        db
-          .select({ count: users.id })
-          .from(users)
-          .where(eq(users.role, "principal"))
-          .then(result => result.length),
-        db
-          .select({ count: users.id })
-          .from(users)
-          .where(eq(users.role, "teacher"))
-          .then(result => result.length),
-      ]);
+    const [totalUsers, totalTeachers, totalAdmins] = await Promise.all([
+      db.select({ count: users.id }).from(users).then(result => result.length),
+      db
+        .select({ count: users.id })
+        .from(users)
+        .where(eq(users.role, "teacher"))
+        .then(result => result.length),
+      db
+        .select({ count: users.id })
+        .from(users)
+        .where(eq(users.role, "admin"))
+        .then(result => result.length),
+    ]);
 
     return {
       totalUsers,
-      adminCount,
-      principalCount,
-      teacherCount,
+      totalTeachers,
+      totalAdmins,
     };
   }
 
   // Search users
   static async searchUsers(searchTerm: string, limit = 10) {
-    return db
+    return await db
       .select({
         id: users.id,
         email: users.email,
         firstName: users.firstName,
         lastName: users.lastName,
         role: users.role,
-        createdAt: users.createdAt,
-        updatedAt: users.updatedAt,
+        employeeId: users.employeeId,
+        department: users.department,
+        phone: users.phone,
+        address: users.address,
+        hireDate: users.hireDate,
+        isActive: users.isActive,
       })
       .from(users)
       .where(
-        and(
+        or(
           like(users.firstName, `%${searchTerm}%`),
           like(users.lastName, `%${searchTerm}%`),
-          like(users.email, `%${searchTerm}%`)
+          like(users.email, `%${searchTerm}%`),
+          like(users.employeeId, `%${searchTerm}%`)
         )
       )
-      .orderBy(asc(users.firstName))
-      .limit(limit);
+      .limit(limit)
+      .orderBy(asc(users.firstName));
   }
 }

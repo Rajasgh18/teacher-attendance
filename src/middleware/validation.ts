@@ -123,7 +123,7 @@ export const joiSchemas = {
     firstName: Joi.string().min(2).max(100).required(),
     lastName: Joi.string().min(2).max(100).required(),
     role: Joi.string()
-      .valid("admin", "teacher", "principal")
+      .valid("admin", "teacher")
       .default("teacher"),
   }),
 
@@ -131,7 +131,7 @@ export const joiSchemas = {
     email: Joi.string().email().optional(),
     firstName: Joi.string().min(2).max(100).optional(),
     lastName: Joi.string().min(2).max(100).optional(),
-    role: Joi.string().valid("admin", "teacher", "principal").optional(),
+    role: Joi.string().valid("admin", "teacher").optional(),
   }),
 
   login: Joi.object({

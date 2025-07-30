@@ -46,7 +46,7 @@ export class SubjectController {
     sendSuccess(res, subject, "Subject retrieved successfully");
   });
 
-  // Create new subject (admin and principal only)
+  // Create new subject (admin only)
   static create = asyncHandler(async (req: Request, res: Response) => {
     const { name, code, description, isActive = true } = req.body;
 
@@ -75,7 +75,7 @@ export class SubjectController {
     sendCreated(res, subject, "Subject created successfully");
   });
 
-  // Update subject (admin and principal only)
+  // Update subject (admin only)
   static update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, code, description, isActive } = req.body;
@@ -114,7 +114,7 @@ export class SubjectController {
     sendSuccess(res, subject, "Subject updated successfully");
   });
 
-  // Delete subject (soft delete - admin and principal only)
+  // Delete subject (soft delete - admin only)
   static delete = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 

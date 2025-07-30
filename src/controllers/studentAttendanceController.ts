@@ -5,7 +5,7 @@ import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
 import { StudentAttendanceService } from "@/services/studentAttendanceService";
 
 export class StudentAttendanceController {
-  // Get all student attendance records (accessible by principals and admins)
+  // Get all student attendance records (accessible by teachers and admins)
   static getAll = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit, studentId, classId, date } = req.query;
 
@@ -24,7 +24,7 @@ export class StudentAttendanceController {
     );
   });
 
-  // Get student attendance by ID (accessible by principals and admins)
+  // Get student attendance by ID (accessible by teachers and admins)
   static getById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -41,7 +41,7 @@ export class StudentAttendanceController {
     );
   });
 
-  // Get student attendance by class (accessible by teachers assigned to the class, principals, and admins)
+  // Get student attendance by class (accessible by teachers assigned to the class and admins)
   static getByClass = asyncHandler(async (req: Request, res: Response) => {
     const { classId } = req.params;
     const { date } = req.query;
@@ -65,7 +65,7 @@ export class StudentAttendanceController {
     );
   });
 
-  // Get student attendance by student (accessible by teachers assigned to the class, principals, and admins)
+  // Get student attendance by student (accessible by teachers assigned to the class and admins)
   static getByStudent = asyncHandler(async (req: Request, res: Response) => {
     const { studentId } = req.params;
     const { startDate, endDate, classId } = req.query;
@@ -91,7 +91,7 @@ export class StudentAttendanceController {
     );
   });
 
-  // Get student attendance by date (accessible by teachers assigned to the class, principals, and admins)
+  // Get student attendance by date (accessible by teachers assigned to the class and admins)
   static getByDate = asyncHandler(async (req: Request, res: Response) => {
     const { date } = req.params;
     const { classId } = req.query;
@@ -112,7 +112,7 @@ export class StudentAttendanceController {
     );
   });
 
-  // Create student attendance record (accessible by principals and admins)
+  // Create student attendance record (accessible by teachers assigned to the class and admins)
   static create = asyncHandler(async (req: Request, res: Response) => {
     const attendanceData = req.body;
 
@@ -133,7 +133,7 @@ export class StudentAttendanceController {
     );
   });
 
-  // Update student attendance record (accessible by principals and admins)
+  // Update student attendance record (accessible by teachers assigned to the class and admins)
   static update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
@@ -151,7 +151,7 @@ export class StudentAttendanceController {
     );
   });
 
-  // Delete student attendance record (accessible by principals and admins)
+  // Delete student attendance record (accessible by admins only)
   static delete = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 

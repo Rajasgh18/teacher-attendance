@@ -2,7 +2,8 @@ import { Router } from "express";
 
 import {
   authenticate,
-  principalOrAdmin,
+  adminOnly,
+  teacherOrAdmin,
   teacherAssignedToStudentClassOrAdmin,
 } from "@/middleware/auth";
 import { studentRateLimiter } from "@/middleware/security";
@@ -19,14 +20,11 @@ router.get("/active", StudentController.getActive);
 // Protected routes (authentication required)
 router.use(authenticate);
 
-// Routes accessible by all authenticated users (teachers, principals, admins)
-// (No specific routes for all users in student management)
+// Routes accessible by all authenticated users (teachers, admins)
+router.get("/", teacherOrAdmin, StudentController.getAll);
+router.get("/gender/:gender", teacherOrAdmin, StudentController.getByGender);
 
-// Routes accessible by principals and admins only
-router.get("/", principalOrAdmin, StudentController.getAll);
-router.get("/gender/:gender", principalOrAdmin, StudentController.getByGender);
-
-// Routes accessible by teachers assigned to the class, principals, and admins
+// Routes accessible by teachers assigned to the class and admins
 router.get(
   "/class/:classId",
   teacherAssignedToStudentClassOrAdmin(),
@@ -48,11 +46,9 @@ router.get(
   StudentController.getAttendance
 );
 
-// Routes accessible by principals and admins only
-router.post("/", principalOrAdmin, StudentController.create);
-
-router.put("/:id", principalOrAdmin, StudentController.update);
-
-router.delete("/:id", principalOrAdmin, StudentController.delete);
+// Routes accessible by admins only
+router.post("/", adminOnly, StudentController.create);
+router.put("/:id", adminOnly, StudentController.update);
+router.delete("/:id", adminOnly, StudentController.delete);
 
 export default router;

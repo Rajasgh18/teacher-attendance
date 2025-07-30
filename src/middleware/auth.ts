@@ -119,7 +119,7 @@ export const adminOnly = authorize(UserRole.ADMIN);
 export const teacherOrAdmin = authorize(UserRole.TEACHER, UserRole.ADMIN);
 
 // Principal or admin middleware
-export const principalOrAdmin = authorize(UserRole.PRINCIPAL, UserRole.ADMIN);
+// Removed principal role - no longer needed
 
 // Self or admin middleware (for users to access their own resources)
 export const selfOrAdmin = (userIdField: string = "userId") => {
@@ -160,11 +160,8 @@ export const teacherAssignedToClassOrAdmin = () => {
       throw new AuthenticationError("Authentication required");
     }
 
-    // Admin and principal can access all classes
-    if (
-      req.user.role === UserRole.ADMIN ||
-      req.user.role === UserRole.PRINCIPAL
-    ) {
+    // Admin can access all classes
+    if (req.user.role === UserRole.ADMIN) {
       return next();
     }
 
@@ -178,13 +175,10 @@ export const teacherAssignedToClassOrAdmin = () => {
 
       try {
         // Import here to avoid circular dependencies
-        const { TeacherService } = await import("@/services/teacherService");
+        const { UserService } = await import("@/services/userService");
 
-        // Get teacher profile
-        const teacher = await TeacherService.getByUserId(req.user.userId);
-
-        // Check if teacher is assigned to this class
-        const assignments = await TeacherService.getAssignments(teacher.id);
+        // Get teacher assignments directly
+        const assignments = await UserService.getTeacherAssignments(req.user.userId);
         const isAssigned = assignments.some(
           assignment => assignment.classId === classId
         );
@@ -204,7 +198,7 @@ export const teacherAssignedToClassOrAdmin = () => {
       }
     } else {
       throw new AuthorizationError(
-        "Access denied. Required roles: teacher, principal, admin"
+        "Access denied. Required roles: teacher, admin"
       );
     }
   };
@@ -221,11 +215,8 @@ export const teacherAssignedToStudentClassOrAdmin = () => {
       throw new AuthenticationError("Authentication required");
     }
 
-    // Admin and principal can access all students
-    if (
-      req.user.role === UserRole.ADMIN ||
-      req.user.role === UserRole.PRINCIPAL
-    ) {
+    // Admin can access all students
+    if (req.user.role === UserRole.ADMIN) {
       return next();
     }
 
@@ -240,14 +231,11 @@ export const teacherAssignedToStudentClassOrAdmin = () => {
 
       try {
         // Import here to avoid circular dependencies
-        const { TeacherService } = await import("@/services/teacherService");
+        const { UserService } = await import("@/services/userService");
         const { StudentService } = await import("@/services/studentService");
 
-        // Get teacher profile
-        const teacher = await TeacherService.getByUserId(req.user.userId);
-
-        // Check if teacher is assigned to the student's class
-        const assignments = await TeacherService.getAssignments(teacher.id);
+        // Get teacher assignments directly
+        const assignments = await UserService.getTeacherAssignments(req.user.userId);
 
         let isAssigned = false;
 
@@ -281,7 +269,7 @@ export const teacherAssignedToStudentClassOrAdmin = () => {
       }
     } else {
       throw new AuthorizationError(
-        "Access denied. Required roles: teacher, principal, admin"
+        "Access denied. Required roles: teacher, admin"
       );
     }
   };

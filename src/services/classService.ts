@@ -3,7 +3,6 @@ import { eq, and, like, asc, desc } from "drizzle-orm";
 import {
   classes,
   students,
-  teachers,
   teacherClass,
   users,
 } from "@/db/schema";
@@ -229,14 +228,17 @@ export class ClassService {
         createdAt: teacherClass.createdAt,
         updatedAt: teacherClass.updatedAt,
         teacher: {
-          id: teachers.id,
-          employeeId: teachers.employeeId,
-          department: teachers.department,
-          phone: teachers.phone,
+          id: users.id,
+          employeeId: users.employeeId,
+          department: users.department,
+          phone: users.phone,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          email: users.email,
         },
       })
       .from(teacherClass)
-      .leftJoin(teachers, eq(teacherClass.teacherId, teachers.id))
+      .leftJoin(users, eq(teacherClass.teacherId, users.id))
       .where(eq(teacherClass.classId, classId));
 
     return result;

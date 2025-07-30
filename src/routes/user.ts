@@ -4,7 +4,6 @@ import {
   adminOnly,
   selfOrAdmin,
   authenticate,
-  principalOrAdmin,
 } from "@/middleware/auth";
 import { userRateLimiter } from "@/middleware/security";
 import { UserController } from "@/controllers/userController";
@@ -17,15 +16,20 @@ const router: Router = Router();
 // Protected routes (authentication required)
 router.use(authenticate);
 
-// Routes accessible by all authenticated users (teachers, principals, admins)
+// Routes accessible by all authenticated users (teachers, admins)
 router.get("/profile", UserController.getProfile);
 
-// Routes accessible by principals and admins only
-router.get(
-  "/teachers",
-  principalOrAdmin,
-  UserController.getWithTeacherProfiles
-);
+// Teacher-specific routes (admin only)
+router.get("/teachers", adminOnly, UserController.getAllTeachers);
+router.get("/teachers/department/:department", adminOnly, UserController.getTeachersByDepartment);
+router.get("/teachers/employee/:employeeId", adminOnly, UserController.getByEmployeeId);
+
+// Teacher assignments (admin or self)
+router.get("/teachers/:teacherId/assignments", selfOrAdmin("teacherId"), UserController.getTeacherAssignments);
+
+// Teacher-class assignment routes (admin only)
+router.post("/teachers/assign", adminOnly, UserController.assignTeacherToClass);
+router.post("/teachers/remove", adminOnly, UserController.removeTeacherFromClass);
 
 // Routes accessible by admins only
 router.get("/", adminOnly, UserController.getAll);
