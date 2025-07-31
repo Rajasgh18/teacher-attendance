@@ -12,10 +12,7 @@ import {
 import { relations } from "drizzle-orm";
 
 // Enums
-export const userRoleEnum = pgEnum("user_role", [
-  "admin",
-  "teacher",
-]);
+export const userRoleEnum = pgEnum("user_role", ["admin", "teacher"]);
 export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
 export const attendanceStatusEnum = pgEnum("attendance_status", [
   "present",
@@ -67,6 +64,7 @@ export const classes = pgTable("classes", {
   grade: varchar("grade", { length: 20 }).notNull(),
   section: varchar("section", { length: 10 }).notNull(),
   academicYear: varchar("academic_year", { length: 20 }).notNull(),
+  description: text("description"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -177,19 +175,16 @@ export const classesRelations = relations(classes, ({ many }) => ({
   studentAttendance: many(studentAttendance),
 }));
 
-export const teacherClassRelations = relations(
-  teacherClass,
-  ({ one }) => ({
-    teacher: one(users, {
-      fields: [teacherClass.teacherId],
-      references: [users.id],
-    }),
-    class: one(classes, {
-      fields: [teacherClass.classId],
-      references: [classes.id],
-    }),
-  })
-);
+export const teacherClassRelations = relations(teacherClass, ({ one }) => ({
+  teacher: one(users, {
+    fields: [teacherClass.teacherId],
+    references: [users.id],
+  }),
+  class: one(classes, {
+    fields: [teacherClass.classId],
+    references: [classes.id],
+  }),
+}));
 
 export const studentsRelations = relations(students, ({ one, many }) => ({
   class: one(classes, {

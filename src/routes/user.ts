@@ -1,10 +1,6 @@
 import { Router } from "express";
 
-import {
-  adminOnly,
-  selfOrAdmin,
-  authenticate,
-} from "@/middleware/auth";
+import { adminOnly, selfOrAdmin, authenticate } from "@/middleware/auth";
 import { userRateLimiter } from "@/middleware/security";
 import { UserController } from "@/controllers/userController";
 
@@ -18,18 +14,35 @@ router.use(authenticate);
 
 // Routes accessible by all authenticated users (teachers, admins)
 router.get("/profile", UserController.getProfile);
+router.get("/classes", UserController.getClasses);
 
 // Teacher-specific routes (admin only)
 router.get("/teachers", adminOnly, UserController.getAllTeachers);
-router.get("/teachers/department/:department", adminOnly, UserController.getTeachersByDepartment);
-router.get("/teachers/employee/:employeeId", adminOnly, UserController.getByEmployeeId);
+router.get(
+  "/teachers/department/:department",
+  adminOnly,
+  UserController.getTeachersByDepartment
+);
+router.get(
+  "/teachers/employee/:employeeId",
+  adminOnly,
+  UserController.getByEmployeeId
+);
 
 // Teacher assignments (admin or self)
-router.get("/teachers/:teacherId/assignments", selfOrAdmin("teacherId"), UserController.getTeacherAssignments);
+router.get(
+  "/teachers/:teacherId/assignments",
+  selfOrAdmin("teacherId"),
+  UserController.getTeacherAssignments
+);
 
 // Teacher-class assignment routes (admin only)
 router.post("/teachers/assign", adminOnly, UserController.assignTeacherToClass);
-router.post("/teachers/remove", adminOnly, UserController.removeTeacherFromClass);
+router.post(
+  "/teachers/remove",
+  adminOnly,
+  UserController.removeTeacherFromClass
+);
 
 // Routes accessible by admins only
 router.get("/", adminOnly, UserController.getAll);

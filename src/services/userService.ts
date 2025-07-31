@@ -89,6 +89,23 @@ export class UserService {
     };
   }
 
+  // Get all classes of a user
+  static async getClasses(userId: string) {
+    return await db
+      .select({
+        id: classes.id,
+        name: classes.name,
+        grade: classes.grade,
+        section: classes.section,
+        academicYear: classes.academicYear,
+        isActive: classes.isActive,
+      })
+      .from(teacherClass)
+      .leftJoin(classes, eq(teacherClass.classId, classes.id))
+      .where(eq(teacherClass.teacherId, userId))
+      .orderBy(asc(classes.grade));
+  }
+
   // Get user by ID
   static async getById(id: string) {
     const [user] = await db

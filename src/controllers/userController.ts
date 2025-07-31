@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import { UserService } from "@/services/userService";
 import { asyncHandler } from "@/middleware/errorHandler";
 import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
+import { StudentService } from "@/services/studentService";
 
 export class UserController {
   // Get all users (admin only)
@@ -19,6 +20,17 @@ export class UserController {
 
     const result = await UserService.getAll(query);
     sendSuccess(res, result, "Users retrieved successfully");
+  });
+
+  // Get all classes of a user
+  static getClasses = asyncHandler(async (req: Request, res: Response) => {
+    if (!req.user?.userId) {
+      sendBadRequest(res, "User ID is required");
+      return;
+    }
+
+    const classes = await UserService.getClasses(req.user.userId);
+    sendSuccess(res, classes, "Classes retrieved successfully");
   });
 
   // Get all teachers (admin only)
@@ -77,18 +89,18 @@ export class UserController {
 
   // Create new user (admin only)
   static create = asyncHandler(async (req: Request, res: Response) => {
-    const { 
-      email, 
-      password, 
-      firstName, 
-      lastName, 
+    const {
+      email,
+      password,
+      firstName,
+      lastName,
       role,
       employeeId,
       department,
       phone,
       address,
       hireDate,
-      isActive = true
+      isActive = true,
     } = req.body;
 
     if (!email || !password || !firstName || !lastName || !role) {
@@ -124,7 +136,10 @@ export class UserController {
     // Validate teacher-specific fields if role is teacher
     if (role === "teacher") {
       if (!employeeId || !department || !phone || !address || !hireDate) {
-        sendBadRequest(res, "All teacher fields must be provided for teacher role");
+        sendBadRequest(
+          res,
+          "All teacher fields must be provided for teacher role"
+        );
         return;
       }
 
@@ -164,17 +179,17 @@ export class UserController {
   // Update user (admin only, or self)
   static update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-    const { 
-      email, 
-      firstName, 
-      lastName, 
+    const {
+      email,
+      firstName,
+      lastName,
       role,
       employeeId,
       department,
       phone,
       address,
       hireDate,
-      isActive
+      isActive,
     } = req.body;
 
     if (!id) {
@@ -316,17 +331,19 @@ export class UserController {
   });
 
   // Get teachers by department (admin only)
-  static getTeachersByDepartment = asyncHandler(async (req: Request, res: Response) => {
-    const { department } = req.params;
+  static getTeachersByDepartment = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { department } = req.params;
 
-    if (!department) {
-      sendBadRequest(res, "Department is required");
-      return;
+      if (!department) {
+        sendBadRequest(res, "Department is required");
+        return;
+      }
+
+      const teachers = await UserService.getTeachersByDepartment(department);
+      sendSuccess(res, teachers, "Teachers retrieved successfully");
     }
-
-    const teachers = await UserService.getTeachersByDepartment(department);
-    sendSuccess(res, teachers, "Teachers retrieved successfully");
-  });
+  );
 
   // Get all users (simplified, admin only)
   static getAllUsers = asyncHandler(async (req: Request, res: Response) => {
@@ -368,41 +385,55 @@ export class UserController {
   });
 
   // Get teacher assignments (admin or self)
-  static getTeacherAssignments = asyncHandler(async (req: Request, res: Response) => {
-    const { teacherId } = req.params;
+  static getTeacherAssignments = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { teacherId } = req.params;
 
-    if (!teacherId) {
-      sendBadRequest(res, "Teacher ID is required");
-      return;
+      if (!teacherId) {
+        sendBadRequest(res, "Teacher ID is required");
+        return;
+      }
+
+      const assignments = await UserService.getTeacherAssignments(teacherId);
+      sendSuccess(
+        res,
+        assignments,
+        "Teacher assignments retrieved successfully"
+      );
     }
-
-    const assignments = await UserService.getTeacherAssignments(teacherId);
-    sendSuccess(res, assignments, "Teacher assignments retrieved successfully");
-  });
+  );
 
   // Assign teacher to class (admin only)
-  static assignTeacherToClass = asyncHandler(async (req: Request, res: Response) => {
-    const { teacherId, classId, isPrimaryTeacher = false } = req.body;
+  static assignTeacherToClass = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { teacherId, classId, isPrimaryTeacher = false } = req.body;
 
-    if (!teacherId || !classId) {
-      sendBadRequest(res, "Teacher ID and Class ID are required");
-      return;
+      if (!teacherId || !classId) {
+        sendBadRequest(res, "Teacher ID and Class ID are required");
+        return;
+      }
+
+      const assignment = await UserService.assignTeacherToClass(
+        teacherId,
+        classId,
+        isPrimaryTeacher
+      );
+      sendCreated(res, assignment, "Teacher assigned to class successfully");
     }
-
-    const assignment = await UserService.assignTeacherToClass(teacherId, classId, isPrimaryTeacher);
-    sendCreated(res, assignment, "Teacher assigned to class successfully");
-  });
+  );
 
   // Remove teacher from class (admin only)
-  static removeTeacherFromClass = asyncHandler(async (req: Request, res: Response) => {
-    const { teacherId, classId } = req.body;
+  static removeTeacherFromClass = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { teacherId, classId } = req.body;
 
-    if (!teacherId || !classId) {
-      sendBadRequest(res, "Teacher ID and Class ID are required");
-      return;
+      if (!teacherId || !classId) {
+        sendBadRequest(res, "Teacher ID and Class ID are required");
+        return;
+      }
+
+      await UserService.removeTeacherFromClass(teacherId, classId);
+      sendSuccess(res, null, "Teacher removed from class successfully");
     }
-
-    await UserService.removeTeacherFromClass(teacherId, classId);
-    sendSuccess(res, null, "Teacher removed from class successfully");
-  });
+  );
 }
