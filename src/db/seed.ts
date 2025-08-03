@@ -3,7 +3,6 @@ import {
   users,
   classes,
   students,
-  subjects,
   teacherClass,
   teacherAttendance,
   studentAttendance,
@@ -15,18 +14,27 @@ const hashPassword = async (password: string): Promise<string> => {
   return await bcrypt.hash(password, 10);
 };
 
-// Helper function to generate random date within a range
-const randomDate = (start: Date, end: Date): Date => {
-  return new Date(
-    start.getTime() + Math.random() * (end.getTime() - start.getTime())
-  );
+// Helper function to generate random coordinates (within a reasonable school area)
+const randomCoordinates = () => {
+  // Example coordinates for a school area (you can adjust these)
+  const baseLat = 40.7128; // New York City latitude
+  const baseLng = -74.006; // New York City longitude
+  const latOffset = (Math.random() - 0.5) * 0.001; // Small offset
+  const lngOffset = (Math.random() - 0.5) * 0.001; // Small offset
+
+  return {
+    latitude: (baseLat + latOffset).toString(),
+    longitude: (baseLng + lngOffset).toString(),
+  };
 };
 
-// Helper function to generate random time
-const randomTime = (): string => {
-  const hours = Math.floor(Math.random() * 8) + 7; // 7 AM to 3 PM
+// Helper function to generate random check-in time
+const randomCheckInTime = (): Date => {
+  const today = new Date();
+  const hours = Math.floor(Math.random() * 2) + 7; // 7 AM to 9 AM
   const minutes = Math.floor(Math.random() * 60);
-  return `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:00`;
+  today.setHours(hours, minutes, 0, 0);
+  return today;
 };
 
 export async function seed() {
@@ -40,7 +48,6 @@ export async function seed() {
     await db.delete(teacherClass);
     await db.delete(students);
     await db.delete(classes);
-    await db.delete(subjects);
     await db.delete(users);
 
     // 1. Create Users (including teachers)
@@ -119,71 +126,7 @@ export async function seed() {
     // Get teacher users for assignments
     const teacherUsers = createdUsers.filter(user => user.role === "teacher");
 
-    // 2. Create Subjects
-    console.log("📚 Creating subjects...");
-    const subjectData = [
-      {
-        name: "Mathematics",
-        code: "MATH",
-        description:
-          "Advanced mathematics including algebra, calculus, and geometry",
-        isActive: true,
-      },
-      {
-        name: "Physics",
-        code: "PHYS",
-        description:
-          "Physical sciences including mechanics, thermodynamics, and quantum physics",
-        isActive: true,
-      },
-      {
-        name: "English Literature",
-        code: "ENG",
-        description: "English language and literature studies",
-        isActive: true,
-      },
-      {
-        name: "Computer Science",
-        code: "CS",
-        description:
-          "Computer programming, algorithms, and software development",
-        isActive: true,
-      },
-      {
-        name: "Chemistry",
-        code: "CHEM",
-        description: "Chemical sciences and laboratory experiments",
-        isActive: true,
-      },
-      {
-        name: "Biology",
-        code: "BIO",
-        description: "Life sciences and biological studies",
-        isActive: true,
-      },
-      {
-        name: "History",
-        code: "HIST",
-        description: "World history and historical studies",
-        isActive: true,
-      },
-      {
-        name: "Geography",
-        code: "GEO",
-        description: "Physical and human geography studies",
-        isActive: true,
-      },
-    ];
-
-    const createdSubjects = await db
-      .insert(subjects)
-      .values(subjectData)
-      .returning();
-    console.log(`✅ Created ${createdSubjects.length} subjects`);
-
-    // 3. Create Classes
-
-    // 3. Create Classes
+    // 2. Create Classes
     console.log("🏫 Creating classes...");
     const classData = [
       {
@@ -191,6 +134,8 @@ export async function seed() {
         grade: "10th Grade",
         section: "A",
         academicYear: "2024-2025",
+        description:
+          "Advanced mathematics including algebra, calculus, and geometry",
         isActive: true,
       },
       {
@@ -198,6 +143,8 @@ export async function seed() {
         grade: "12th Grade",
         section: "B",
         academicYear: "2024-2025",
+        description:
+          "Physical sciences including mechanics, thermodynamics, and quantum physics",
         isActive: true,
       },
       {
@@ -205,6 +152,7 @@ export async function seed() {
         grade: "11th Grade",
         section: "C",
         academicYear: "2024-2025",
+        description: "English language and literature studies",
         isActive: true,
       },
       {
@@ -212,6 +160,8 @@ export async function seed() {
         grade: "12th Grade",
         section: "D",
         academicYear: "2024-2025",
+        description:
+          "Computer programming, algorithms, and software development",
         isActive: true,
       },
     ];
@@ -222,7 +172,7 @@ export async function seed() {
       .returning();
     console.log(`✅ Created ${createdClasses.length} classes`);
 
-    // 4. Create Teacher-Class Assignments
+    // 3. Create Teacher-Class Assignments
     console.log("👨‍🏫🏫 Creating teacher-class assignments...");
     const teacherClassData = [
       // Primary assignments (main teachers for each class)
@@ -286,7 +236,7 @@ export async function seed() {
       `✅ Created ${createdTeacherClass.length} teacher-class assignments`
     );
 
-    // 5. Create Students
+    // 4. Create Students
     console.log("👨‍🎓 Creating students...");
     const studentData = [
       // Mathematics 101 Students
@@ -484,7 +434,7 @@ export async function seed() {
       .returning();
     console.log(`✅ Created ${createdStudents.length} students`);
 
-    // 6. Create Teacher Attendance Records (last 30 days)
+    // 5. Create Teacher Attendance Records (last 30 days)
     console.log("📊 Creating teacher attendance records...");
     const teacherAttendanceData = [];
     const today = new Date();
@@ -498,24 +448,22 @@ export async function seed() {
 
       for (const teacher of teacherUsers) {
         const status = Math.random() > 0.1 ? "present" : "absent";
-        const checkIn = status === "absent" ? null : randomTime();
-        const checkOut = status === "absent" ? null : randomTime();
 
-        // Format date as YYYY-MM-DD
-        const dateString =
-          date.getFullYear() +
-          "-" +
-          String(date.getMonth() + 1).padStart(2, "0") +
-          "-" +
-          String(date.getDate()).padStart(2, "0");
+        const coords = randomCoordinates();
+        const checkInTime = randomCheckInTime();
+
+        // Set the check-in time to the specific date from the loop
+        checkInTime.setFullYear(date.getFullYear());
+        checkInTime.setMonth(date.getMonth());
+        checkInTime.setDate(date.getDate());
 
         teacherAttendanceData.push({
           teacherId: teacher.id,
-          date: dateString,
-          checkIn: checkIn,
-          checkOut: checkOut,
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+          checkIn: checkInTime,
           status: status as "present" | "absent",
-          notes: status === "absent" ? "Sick leave" : null,
+          notes: null,
         });
       }
     }
@@ -525,7 +473,7 @@ export async function seed() {
       `✅ Created ${teacherAttendanceData.length} teacher attendance records`
     );
 
-    // 7. Create Student Attendance Records (last 30 days)
+    // 6. Create Student Attendance Records (last 30 days)
     console.log("📊 Creating student attendance records...");
     const studentAttendanceData = [];
 
@@ -553,7 +501,7 @@ export async function seed() {
           date: dateString,
           status: status as "present" | "absent",
           notes: status === "absent" ? "Absent" : null,
-          markedBy: createdUsers[2]!.id, // Sarah Johnson as default marker
+          markedBy: teacherUsers[0]!.id, // Sarah Johnson as default marker
         });
       }
     }
@@ -565,8 +513,9 @@ export async function seed() {
 
     console.log("🎉 Database seeding completed successfully!");
     console.log("\n📋 Summary:");
-    console.log(`- ${createdUsers.length} users created (including ${teacherUsers.length} teachers)`);
-    console.log(`- ${createdSubjects.length} subjects created`);
+    console.log(
+      `- ${createdUsers.length} users created (including ${teacherUsers.length} teachers)`
+    );
     console.log(`- ${createdClasses.length} classes created`);
     console.log(
       `- ${createdTeacherClass.length} teacher-class assignments created`
@@ -578,11 +527,6 @@ export async function seed() {
     console.log(
       `- ${studentAttendanceData.length} student attendance records created`
     );
-
-    console.log("\n📚 Subjects Created:");
-    createdSubjects.forEach(subject => {
-      console.log(`  - ${subject.name} (${subject.code})`);
-    });
 
     console.log("\n👨‍🏫🏫 Teacher-Class Assignments:");
     createdTeacherClass.forEach((assignment: any, index: number) => {
@@ -596,7 +540,6 @@ export async function seed() {
 
     console.log("\n🔑 Default Login Credentials:");
     console.log("Admin: admin@school.com / admin123");
-
     console.log("Teacher: sarah.johnson@school.com / teacher123");
   } catch (error) {
     console.error("❌ Error seeding database:", error);

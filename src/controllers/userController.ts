@@ -4,6 +4,7 @@ import { UserService } from "@/services/userService";
 import { asyncHandler } from "@/middleware/errorHandler";
 import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
 import { StudentService } from "@/services/studentService";
+import { AttendanceStatus } from "@/types";
 
 export class UserController {
   // Get all users (admin only)
@@ -72,6 +73,34 @@ export class UserController {
 
     const teacher = await UserService.getByEmployeeId(employeeId);
     sendSuccess(res, teacher, "Teacher retrieved successfully");
+  });
+
+  // Check in a user
+  static checkIn = asyncHandler(async (req: Request, res: Response) => {
+    const { latitude, longitude, checkIn, notes, status } = req.body;
+
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      sendBadRequest(res, "User ID is required");
+      return;
+    }
+
+    if (!latitude || !longitude || !checkIn) {
+      sendBadRequest(res, "All required fields must be provided");
+      return;
+    }
+
+    const attendance = await UserService.checkIn({
+      teacherId: userId,
+      latitude,
+      longitude,
+      checkIn,
+      status,
+      notes,
+    });
+
+    sendSuccess(res, attendance, "Check in successful");
   });
 
   // Get user by email (admin only)

@@ -32,34 +32,18 @@ export enum UserRole {
   TEACHER = "teacher",
 }
 
-// Teacher Types
-export interface Teacher {
-  id: string;
-  userId: string;
-  employeeId: string;
-  department: string;
-  designation: string;
-  phoneNumber: string;
-  address: string;
-  joiningDate: Date;
-  isActive: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-  user: User;
-}
-
 // Attendance Types
 export interface Attendance {
   id: string;
   teacherId: string;
   date: Date;
-  checkInTime?: Date;
-  checkOutTime?: Date;
+  checkIn: Date;
+  latitude: number;
+  longitude: number;
   status: AttendanceStatus;
   notes?: string;
   createdAt: Date;
   updatedAt: Date;
-  teacher: Teacher;
 }
 
 export enum AttendanceStatus {

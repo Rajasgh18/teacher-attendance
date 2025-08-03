@@ -8,6 +8,7 @@ import {
   date,
   time,
   pgEnum,
+  numeric,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -33,21 +34,6 @@ export const users = pgTable("users", {
   phone: varchar("phone", { length: 20 }),
   address: text("address"),
   hireDate: date("hire_date"),
-  isActive: boolean("is_active").default(true).notNull(),
-  createdAt: timestamp("created_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-  updatedAt: timestamp("updated_at", { withTimezone: true })
-    .defaultNow()
-    .notNull(),
-});
-
-// Subjects table
-export const subjects = pgTable("subjects", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: varchar("name", { length: 100 }).notNull(),
-  code: varchar("code", { length: 20 }).notNull().unique(),
-  description: text("description"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -122,9 +108,9 @@ export const teacherAttendance = pgTable("teacher_attendance", {
   teacherId: uuid("teacher_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  date: date("date").notNull(),
-  checkIn: time("check_in"),
-  checkOut: time("check_out"),
+  latitude: numeric("latitude").notNull(),
+  longitude: numeric("longitude").notNull(),
+  checkIn: timestamp("check_in", { withTimezone: true }).notNull(),
   status: attendanceStatusEnum("status").notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -163,10 +149,6 @@ export const usersRelations = relations(users, ({ many }) => ({
   classAssignments: many(teacherClass),
   teacherAttendance: many(teacherAttendance),
   markedAttendance: many(studentAttendance),
-}));
-
-export const subjectsRelations = relations(subjects, ({ many }) => ({
-  // No more teacher assignments since we're class-based
 }));
 
 export const classesRelations = relations(classes, ({ many }) => ({
@@ -225,8 +207,6 @@ export const studentAttendanceRelations = relations(
 // Export types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
-export type Subject = typeof subjects.$inferSelect;
-export type NewSubject = typeof subjects.$inferInsert;
 export type Class = typeof classes.$inferSelect;
 export type NewClass = typeof classes.$inferInsert;
 export type TeacherClass = typeof teacherClass.$inferSelect;

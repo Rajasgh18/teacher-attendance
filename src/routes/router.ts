@@ -4,8 +4,7 @@ import authRoutes from "./auth";
 import userRoutes from "./user";
 import classRoutes from "./class";
 import studentRoutes from "./student";
-import subjectRoutes from "./subject";
-import studentAttendanceRoutes from "./student-attendance";
+import attendanceRoutes from "./attendance";
 
 const appRouter: Router = Router();
 
@@ -22,8 +21,7 @@ appRouter.get("/health", (_, res) => {
 appRouter.use("/auth", authRoutes);
 appRouter.use("/user", userRoutes);
 appRouter.use("/class", classRoutes);
-appRouter.use("/subject", subjectRoutes);
 appRouter.use("/student", studentRoutes);
-appRouter.use("/student-attendance", studentAttendanceRoutes);
+appRouter.use("/attendance", attendanceRoutes);
 
 export default appRouter;

@@ -3,9 +3,18 @@ import { eq, and, like, asc, desc, or, ne } from "drizzle-orm";
 
 import { db } from "@/db";
 import { config } from "@/config";
-import type { NewUser } from "@/db/schema";
-import { users, teacherClass, classes } from "@/db/schema";
-import { NotFoundError, ConflictError, UserWithoutPassword } from "@/types";
+import type {
+  NewTeacherAttendance,
+  NewUser,
+  TeacherAttendance,
+} from "@/db/schema";
+import { users, teacherClass, classes, teacherAttendance } from "@/db/schema";
+import {
+  NotFoundError,
+  ConflictError,
+  UserWithoutPassword,
+  AttendanceStatus,
+} from "@/types";
 
 export class UserService {
   // Get all users with pagination and search
@@ -287,6 +296,12 @@ export class UserService {
       .from(users)
       .where(and(eq(users.department, department), eq(users.role, "teacher")))
       .orderBy(asc(users.firstName));
+  }
+
+  // Check in a user
+
+  static async checkIn(data: NewTeacherAttendance) {
+    return await db.insert(teacherAttendance).values(data);
   }
 
   // Create new user

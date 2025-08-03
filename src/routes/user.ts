@@ -15,6 +15,7 @@ router.use(authenticate);
 // Routes accessible by all authenticated users (teachers, admins)
 router.get("/profile", UserController.getProfile);
 router.get("/classes", UserController.getClasses);
+router.post("/check-in", UserController.checkIn);
 
 // Teacher-specific routes (admin only)
 router.get("/teachers", adminOnly, UserController.getAllTeachers);

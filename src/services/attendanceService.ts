@@ -1,10 +1,14 @@
 import { eq, and, asc, desc } from "drizzle-orm";
 
 import { db } from "@/db";
-import { NewStudentAttendance } from "@/db/schema";
+import {
+  NewStudentAttendance,
+  NewTeacherAttendance,
+  teacherAttendance,
+} from "@/db/schema";
 import { studentAttendance, students, classes, users } from "@/db/schema";
 
-export class StudentAttendanceService {
+export class AttendanceService {
   // Get all student attendance records with pagination
   static async getAll(
     query: {
@@ -95,7 +99,7 @@ export class StudentAttendanceService {
   }
 
   // Get student attendance by ID
-  static async getById(id: string) {
+  static async getStudentAttendanceById(id: string) {
     const result = await db
       .select({
         id: studentAttendance.id,
@@ -138,7 +142,10 @@ export class StudentAttendanceService {
   }
 
   // Get student attendance by class
-  static async getByClass(classId: string, query: { date?: string } = {}) {
+  static async getStudentAttendanceByClass(
+    classId: string,
+    query: { date?: string } = {}
+  ) {
     const { date } = query;
 
     let whereConditions = [eq(studentAttendance.classId, classId)];
@@ -180,11 +187,14 @@ export class StudentAttendanceService {
       .where(whereClause)
       .orderBy(asc(studentAttendance.date), asc(students.firstName));
 
-    return result;
+    return result.map(attendance => ({
+      ...attendance,
+      date: new Date(attendance.date).getTime(),
+    }));
   }
 
   // Get student attendance by student
-  static async getByStudent(
+  static async getStudentAttendanceByStudent(
     studentId: string,
     query: {
       startDate?: string;
@@ -244,7 +254,10 @@ export class StudentAttendanceService {
   }
 
   // Get student attendance by date
-  static async getByDate(date: string, query: { classId?: string } = {}) {
+  static async getStudentAttendanceByDate(
+    date: string,
+    query: { classId?: string } = {}
+  ) {
     const { classId } = query;
 
     let whereConditions = [eq(studentAttendance.date, date)];
@@ -297,7 +310,7 @@ export class StudentAttendanceService {
   }
 
   // Create student attendance record
-  static async create(attendanceData: NewStudentAttendance) {
+  static async createStudentAttendance(attendanceData: NewStudentAttendance) {
     const result = await db
       .insert(studentAttendance)
       .values(attendanceData)
@@ -305,8 +318,47 @@ export class StudentAttendanceService {
     return result[0];
   }
 
+  // Create student attendance record in bulk
+  static async createStudentAttendanceBulk(
+    attendanceData: NewStudentAttendance[]
+  ) {
+    for (const attendance of attendanceData) {
+      try {
+        // Convert number timestamp to date string (YYYY-MM-DD format)
+        const dateObj = new Date(attendance.date || Date.now());
+        const dateString = dateObj.toISOString().split('T')[0];
+        
+        // The attendance.studentId is already the database ID, so we can use it directly
+        // Just verify the student exists in the database
+        const student = await db
+          .select({ id: students.id })
+          .from(students)
+          .where(eq(students.id, attendance.studentId))
+          .limit(1);
+        
+        if (student.length === 0) {
+          console.error(`Student not found with database ID: ${attendance.studentId}`);
+          continue;
+        }
+        
+        const processedAttendance = {
+          ...attendance,
+          studentId: attendance.studentId, // Already the correct database ID
+          date: dateString,
+        } as NewStudentAttendance;
+        
+        await this.createStudentAttendance(processedAttendance);
+      } catch (error) {
+        console.error(`Error processing attendance for student ${attendance.studentId}:`, error);
+      }
+    }
+  }
+
   // Update student attendance record
-  static async update(id: string, updateData: Partial<NewStudentAttendance>) {
+  static async updateStudentAttendance(
+    id: string,
+    updateData: Partial<NewStudentAttendance>
+  ) {
     const result = await db
       .update(studentAttendance)
       .set({ ...updateData, updatedAt: new Date() })
@@ -316,7 +368,70 @@ export class StudentAttendanceService {
   }
 
   // Delete student attendance record
-  static async delete(id: string) {
+  static async deleteStudentAttendance(id: string) {
     await db.delete(studentAttendance).where(eq(studentAttendance.id, id));
+  }
+
+  // Get teacher attendance
+  static async getTeacherAttendance(query: {
+    page?: number;
+    limit?: number;
+    teacherId?: string;
+  }) {
+    const { page = 1, limit = 10, teacherId } = query;
+    const offset = (page - 1) * limit;
+
+    let whereConditions = [];
+
+    if (teacherId) {
+      whereConditions.push(eq(teacherAttendance.teacherId, teacherId));
+    }
+
+    const whereClause = and(...whereConditions);
+
+    const result = await db
+      .select()
+      .from(teacherAttendance)
+      .where(whereClause)
+      .orderBy(asc(teacherAttendance.createdAt))
+      .limit(limit)
+      .offset(offset);
+
+    return result;
+  }
+
+  // Create teacher attendance record
+  static async createTeacherAttendance(attendanceData: NewTeacherAttendance) {
+    const result = await db
+      .insert(teacherAttendance)
+      .values(attendanceData)
+      .returning();
+    return result[0];
+  }
+
+  // Get teacher attendance by ID
+  static async getTeacherAttendanceById(teacherId: string) {
+    const result = await db
+      .select()
+      .from(teacherAttendance)
+      .where(eq(teacherAttendance.teacherId, teacherId));
+    return result.map(attendance => ({
+      ...attendance,
+      checkIn: attendance.checkIn.getTime(),
+    }));
+  }
+
+  // Create teacher attendance record in bulk
+  static async createTeacherAttendanceBulk(
+    attendanceData: NewTeacherAttendance[]
+  ) {
+    for (const attendance of attendanceData) {
+      // Convert number timestamp to Date object for checkIn
+      const processedAttendance = {
+        ...attendance,
+        checkIn: new Date(attendance.checkIn || Date.now()),
+      } as NewTeacherAttendance;
+      await this.createTeacherAttendance(processedAttendance);
+    }
   }
 }
