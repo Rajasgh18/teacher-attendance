@@ -4,7 +4,6 @@ import {
   users,
   classes,
   students,
-  subjects,
   studentAttendance,
 } from "@/db/schema";
 import { db } from "@/db";
