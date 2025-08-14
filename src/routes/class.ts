@@ -46,11 +46,6 @@ router.get(
   teacherAssignedToClassOrAdmin(),
   ClassController.getWithTeachers
 );
-router.get(
-  "/:classId/stats",
-  teacherAssignedToClassOrAdmin(),
-  ClassController.getClassStats
-);
 
 // Routes accessible by admins only
 router.post("/", adminOnly, ClassController.create);

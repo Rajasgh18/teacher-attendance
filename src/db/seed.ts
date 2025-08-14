@@ -3,9 +3,10 @@ import {
   users,
   classes,
   students,
-  teacherClass,
+  teacherAssignments,
   teacherAttendance,
   studentAttendance,
+  subjects,
 } from "./schema";
 import bcrypt from "bcryptjs";
 
@@ -45,7 +46,7 @@ export async function seed() {
     console.log("🧹 Clearing existing data...");
     await db.delete(studentAttendance);
     await db.delete(teacherAttendance);
-    await db.delete(teacherClass);
+    await db.delete(teacherAssignments);
     await db.delete(students);
     await db.delete(classes);
     await db.delete(users);
@@ -172,31 +173,72 @@ export async function seed() {
       .returning();
     console.log(`✅ Created ${createdClasses.length} classes`);
 
+    // 3. Create Subjects
+    console.log("🏫 Creating subjects...");
+    const subjectData = [
+      {
+        name: "Mathematics",
+        code: "MATH",
+        description:
+          "Advanced mathematics including algebra, calculus, and geometry",
+        isActive: true,
+      },
+      {
+        name: "Physics",
+        code: "PHYS",
+        description:
+          "Physical sciences including mechanics, thermodynamics, and quantum physics",
+        isActive: true,
+      },
+      {
+        name: "English",
+        code: "ENG",
+        description: "English language and literature studies",
+        isActive: true,
+      },
+      {
+        name: "Computer Science",
+        code: "CS",
+        description:
+          "Computer programming, algorithms, and software development",
+        isActive: true,
+      },
+    ];
+    const createdSubjects = await db
+      .insert(subjects)
+      .values(subjectData)
+      .returning();
+    console.log(`✅ Created ${createdSubjects.length} subjects`);
+
     // 3. Create Teacher-Class Assignments
     console.log("👨‍🏫🏫 Creating teacher-class assignments...");
-    const teacherClassData = [
+    const teacherAssignmentsData = [
       // Primary assignments (main teachers for each class)
       {
         teacherId: teacherUsers[0]!.id, // Sarah Johnson
         classId: createdClasses[0]!.id, // Mathematics 101
+        subjectId: createdSubjects[0]!.id, // Mathematics
         isPrimaryTeacher: true,
         isActive: true,
       },
       {
         teacherId: teacherUsers[1]!.id, // Michael Chen
         classId: createdClasses[1]!.id, // Physics Advanced
+        subjectId: createdSubjects[1]!.id, // Physics
         isPrimaryTeacher: true,
         isActive: true,
       },
       {
         teacherId: teacherUsers[2]!.id, // Emily Davis
         classId: createdClasses[2]!.id, // English Literature
+        subjectId: createdSubjects[2]!.id, // English
         isPrimaryTeacher: true,
         isActive: true,
       },
       {
         teacherId: teacherUsers[3]!.id, // David Wilson
         classId: createdClasses[3]!.id, // Computer Science
+        subjectId: createdSubjects[3]!.id, // Computer Science
         isPrimaryTeacher: true,
         isActive: true,
       },
@@ -205,32 +247,36 @@ export async function seed() {
       {
         teacherId: teacherUsers[0]!.id, // Sarah Johnson - also teaches Physics Advanced
         classId: createdClasses[1]!.id, // Physics Advanced
+        subjectId: createdSubjects[1]!.id, // Physics
         isPrimaryTeacher: false,
         isActive: true,
       },
       {
         teacherId: teacherUsers[1]!.id, // Michael Chen - also teaches Mathematics 101
         classId: createdClasses[0]!.id, // Mathematics 101
+        subjectId: createdSubjects[0]!.id, // Mathematics
         isPrimaryTeacher: false,
         isActive: true,
       },
       {
         teacherId: teacherUsers[2]!.id, // Emily Davis - also teaches Computer Science
         classId: createdClasses[3]!.id, // Computer Science
+        subjectId: createdSubjects[3]!.id, // Computer Science
         isPrimaryTeacher: false,
         isActive: true,
       },
       {
         teacherId: teacherUsers[3]!.id, // David Wilson - also teaches English Literature
         classId: createdClasses[2]!.id, // English Literature
+        subjectId: createdSubjects[2]!.id, // English
         isPrimaryTeacher: false,
         isActive: true,
       },
     ];
 
     const createdTeacherClass = await db
-      .insert(teacherClass)
-      .values(teacherClassData)
+      .insert(teacherAssignments)
+      .values(teacherAssignmentsData)
       .returning();
     console.log(
       `✅ Created ${createdTeacherClass.length} teacher-class assignments`

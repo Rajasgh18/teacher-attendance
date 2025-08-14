@@ -203,17 +203,4 @@ export class ClassController {
     const classes = await ClassService.getActive();
     sendSuccess(res, classes, "Active classes retrieved successfully");
   });
-
-  // Get class statistics (accessible by teachers and admins)
-  static getClassStats = asyncHandler(async (req: Request, res: Response) => {
-    const { classId } = req.params;
-
-    if (!classId) {
-      sendBadRequest(res, "Class ID is required");
-      return;
-    }
-
-    const stats = await ClassService.getClassStats(classId);
-    sendSuccess(res, stats, "Class statistics retrieved successfully");
-  });
 }

@@ -1,11 +1,6 @@
 import { eq, and, like, asc, desc } from "drizzle-orm";
 
-import {
-  classes,
-  students,
-  teacherClass,
-  users,
-} from "@/db/schema";
+import { classes, students, teacherAssignments, users } from "@/db/schema";
 import { db } from "@/db";
 import type { NewClass } from "@/db/schema";
 import { NotFoundError, ConflictError } from "@/types";
@@ -220,13 +215,13 @@ export class ClassService {
   static async getWithTeachers(classId: string) {
     const result = await db
       .select({
-        id: teacherClass.id,
-        teacherId: teacherClass.teacherId,
-        classId: teacherClass.classId,
-        isPrimaryTeacher: teacherClass.isPrimaryTeacher,
-        isActive: teacherClass.isActive,
-        createdAt: teacherClass.createdAt,
-        updatedAt: teacherClass.updatedAt,
+        id: teacherAssignments.id,
+        teacherId: teacherAssignments.teacherId,
+        classId: teacherAssignments.classId,
+        isPrimaryTeacher: teacherAssignments.isPrimaryTeacher,
+        isActive: teacherAssignments.isActive,
+        createdAt: teacherAssignments.createdAt,
+        updatedAt: teacherAssignments.updatedAt,
         teacher: {
           id: users.id,
           employeeId: users.employeeId,
@@ -237,9 +232,9 @@ export class ClassService {
           email: users.email,
         },
       })
-      .from(teacherClass)
-      .leftJoin(users, eq(teacherClass.teacherId, users.id))
-      .where(eq(teacherClass.classId, classId));
+      .from(teacherAssignments)
+      .leftJoin(users, eq(teacherAssignments.teacherId, users.id))
+      .where(eq(teacherAssignments.classId, classId));
 
     return result;
   }
@@ -271,31 +266,5 @@ export class ClassService {
       .from(classes)
       .where(eq(classes.isActive, true))
       .orderBy(asc(classes.name));
-  }
-
-  // Get class statistics
-  static async getClassStats(classId: string) {
-    const [studentCount, teacherCount] = await Promise.all([
-      db
-        .select({ count: students.id })
-        .from(students)
-        .where(and(eq(students.classId, classId), eq(students.isActive, true)))
-        .then(result => result.length),
-      db
-        .select({ count: teacherClass.id })
-        .from(teacherClass)
-        .where(
-          and(
-            eq(teacherClass.classId, classId),
-            eq(teacherClass.isActive, true)
-          )
-        )
-        .then(result => result.length),
-    ]);
-
-    return {
-      studentCount,
-      teacherCount,
-    };
   }
 }

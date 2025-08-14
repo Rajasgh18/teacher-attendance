@@ -8,7 +8,13 @@ import type {
   NewUser,
   TeacherAttendance,
 } from "@/db/schema";
-import { users, teacherClass, classes, teacherAttendance } from "@/db/schema";
+import {
+  users,
+  teacherAssignments,
+  classes,
+  teacherAttendance,
+  subjects,
+} from "@/db/schema";
 import {
   NotFoundError,
   ConflictError,
@@ -109,9 +115,9 @@ export class UserService {
         academicYear: classes.academicYear,
         isActive: classes.isActive,
       })
-      .from(teacherClass)
-      .leftJoin(classes, eq(teacherClass.classId, classes.id))
-      .where(eq(teacherClass.teacherId, userId))
+      .from(teacherAssignments)
+      .leftJoin(classes, eq(teacherAssignments.classId, classes.id))
+      .where(eq(teacherAssignments.teacherId, userId))
       .orderBy(asc(classes.grade));
   }
 
@@ -513,73 +519,34 @@ export class UserService {
   static async getTeacherAssignments(teacherId: string) {
     return await db
       .select({
-        id: teacherClass.id,
-        classId: teacherClass.classId,
-        isPrimaryTeacher: teacherClass.isPrimaryTeacher,
-        isActive: teacherClass.isActive,
-        createdAt: teacherClass.createdAt,
-        updatedAt: teacherClass.updatedAt,
-        class: {
-          id: classes.id,
-          name: classes.name,
-          grade: classes.grade,
-          section: classes.section,
-          academicYear: classes.academicYear,
-          isActive: classes.isActive,
-        },
+        id: teacherAssignments.id,
+        classId: teacherAssignments.classId,
+        subjectId: teacherAssignments.subjectId,
+        teacherId: teacherAssignments.teacherId,
+        isPrimaryTeacher: teacherAssignments.isPrimaryTeacher,
+        isActive: teacherAssignments.isActive,
+        createdAt: teacherAssignments.createdAt,
+        updatedAt: teacherAssignments.updatedAt,
       })
-      .from(teacherClass)
-      .leftJoin(classes, eq(teacherClass.classId, classes.id))
-      .where(eq(teacherClass.teacherId, teacherId));
+      .from(teacherAssignments)
+      .where(eq(teacherAssignments.teacherId, teacherId));
   }
 
-  // Assign teacher to class
-  static async assignTeacherToClass(
-    teacherId: string,
-    classId: string,
-    isPrimaryTeacher: boolean = false
-  ) {
-    // Check if assignment already exists
-    const existingAssignment = await db
-      .select({ id: teacherClass.id })
-      .from(teacherClass)
-      .where(
-        and(
-          eq(teacherClass.teacherId, teacherId),
-          eq(teacherClass.classId, classId)
-        )
-      );
-
-    if (existingAssignment.length > 0) {
-      throw new ConflictError("Teacher is already assigned to this class");
-    }
-
-    const [assignment] = await db
-      .insert(teacherClass)
-      .values({
-        teacherId,
-        classId,
-        isPrimaryTeacher,
-        isActive: true,
+  // Get teacher subjects
+  static async getTeacherSubjects(teacherId: string) {
+    return await db
+      .select({
+        id: subjects.id,
+        name: subjects.name,
+        code: subjects.code,
+        description: subjects.description,
+        isActive: subjects.isActive,
+        createdAt: subjects.createdAt,
+        updatedAt: subjects.updatedAt,
       })
-      .returning();
-
-    return assignment;
-  }
-
-  // Remove teacher from class
-  static async removeTeacherFromClass(
-    teacherId: string,
-    classId: string
-  ): Promise<void> {
-    await db
-      .delete(teacherClass)
-      .where(
-        and(
-          eq(teacherClass.teacherId, teacherId),
-          eq(teacherClass.classId, classId)
-        )
-      );
+      .from(teacherAssignments)
+      .leftJoin(subjects, eq(teacherAssignments.subjectId, subjects.id))
+      .where(eq(teacherAssignments.teacherId, teacherId));
   }
 
   // Verify password

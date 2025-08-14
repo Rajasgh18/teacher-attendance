@@ -61,7 +61,7 @@ export const classes = pgTable("classes", {
 });
 
 // Teacher Class Assignment table (Many-to-Many relationship for class-based attendance)
-export const teacherClass = pgTable("teacher_class", {
+export const teacherAssignments = pgTable("teacher_assignments", {
   id: uuid("id").primaryKey().defaultRandom(),
   teacherId: uuid("teacher_id")
     .notNull()
@@ -69,6 +69,9 @@ export const teacherClass = pgTable("teacher_class", {
   classId: uuid("class_id")
     .notNull()
     .references(() => classes.id, { onDelete: "cascade" }),
+  subjectId: uuid("subject_id")
+    .notNull()
+    .references(() => subjects.id, { onDelete: "cascade" }),
   isPrimaryTeacher: boolean("is_primary_teacher").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
@@ -144,27 +147,63 @@ export const studentAttendance = pgTable("student_attendance", {
     .notNull(),
 });
 
+export const subjects = pgTable("subjects", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 100 }).notNull(),
+  code: varchar("code", { length: 100 }).notNull().unique(),
+  description: text("description"),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const marks = pgTable("marks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => students.id, { onDelete: "cascade" }),
+  subjectId: uuid("subject_id")
+    .notNull()
+    .references(() => subjects.id, { onDelete: "cascade" }),
+  marks: numeric("marks").notNull(),
+  month: varchar("month", { length: 100 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
-  classAssignments: many(teacherClass),
+  assignments: many(teacherAssignments),
   teacherAttendance: many(teacherAttendance),
   markedAttendance: many(studentAttendance),
 }));
 
 export const classesRelations = relations(classes, ({ many }) => ({
-  teacherClassAssignments: many(teacherClass),
+  teacherAssignments: many(teacherAssignments),
   students: many(students),
   studentAttendance: many(studentAttendance),
 }));
 
-export const teacherClassRelations = relations(teacherClass, ({ one }) => ({
+export const teacherAssignmentsRelations = relations(teacherAssignments, ({ one }) => ({
   teacher: one(users, {
-    fields: [teacherClass.teacherId],
+    fields: [teacherAssignments.teacherId],
     references: [users.id],
   }),
   class: one(classes, {
-    fields: [teacherClass.classId],
+    fields: [teacherAssignments.classId],
     references: [classes.id],
+  }),
+  subject: one(subjects, {
+    fields: [teacherAssignments.subjectId],
+    references: [subjects.id],
   }),
 }));
 
@@ -209,11 +248,15 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 export type Class = typeof classes.$inferSelect;
 export type NewClass = typeof classes.$inferInsert;
-export type TeacherClass = typeof teacherClass.$inferSelect;
-export type NewTeacherClass = typeof teacherClass.$inferInsert;
+export type TeacherAssignment = typeof teacherAssignments.$inferSelect;
+export type NewTeacherAssignment = typeof teacherAssignments.$inferInsert;
 export type Student = typeof students.$inferSelect;
 export type NewStudent = typeof students.$inferInsert;
 export type TeacherAttendance = typeof teacherAttendance.$inferSelect;
 export type NewTeacherAttendance = typeof teacherAttendance.$inferInsert;
 export type StudentAttendance = typeof studentAttendance.$inferSelect;
 export type NewStudentAttendance = typeof studentAttendance.$inferInsert;
+export type Subject = typeof subjects.$inferSelect;
+export type NewSubject = typeof subjects.$inferInsert;
+export type Mark = typeof marks.$inferSelect;
+export type NewMark = typeof marks.$inferInsert;

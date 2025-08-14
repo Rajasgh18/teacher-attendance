@@ -31,18 +31,12 @@ router.get(
 );
 
 // Teacher assignments (admin or self)
-router.get(
-  "/teachers/:teacherId/assignments",
-  selfOrAdmin("teacherId"),
-  UserController.getTeacherAssignments
-);
+router.get("/assignments", UserController.getTeacherAssignments);
 
-// Teacher-class assignment routes (admin only)
-router.post("/teachers/assign", adminOnly, UserController.assignTeacherToClass);
-router.post(
-  "/teachers/remove",
-  adminOnly,
-  UserController.removeTeacherFromClass
+router.get(
+  "/teachers/:teacherId/subjects",
+  selfOrAdmin("teacherId"),
+  UserController.getTeacherSubjects
 );
 
 // Routes accessible by admins only

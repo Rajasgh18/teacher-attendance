@@ -416,14 +416,14 @@ export class UserController {
   // Get teacher assignments (admin or self)
   static getTeacherAssignments = asyncHandler(
     async (req: Request, res: Response) => {
-      const { teacherId } = req.params;
+      const userId = (req as any).user?.userId;
 
-      if (!teacherId) {
-        sendBadRequest(res, "Teacher ID is required");
+      if (!userId) {
+        sendBadRequest(res, "User ID is required");
         return;
       }
 
-      const assignments = await UserService.getTeacherAssignments(teacherId);
+      const assignments = await UserService.getTeacherAssignments(userId);
       sendSuccess(
         res,
         assignments,
@@ -432,37 +432,18 @@ export class UserController {
     }
   );
 
-  // Assign teacher to class (admin only)
-  static assignTeacherToClass = asyncHandler(
+  // Get teacher subjects
+  static getTeacherSubjects = asyncHandler(
     async (req: Request, res: Response) => {
-      const { teacherId, classId, isPrimaryTeacher = false } = req.body;
+      const { teacherId } = req.params;
 
-      if (!teacherId || !classId) {
-        sendBadRequest(res, "Teacher ID and Class ID are required");
+      if (!teacherId) {
+        sendBadRequest(res, "Teacher ID is required");
         return;
       }
 
-      const assignment = await UserService.assignTeacherToClass(
-        teacherId,
-        classId,
-        isPrimaryTeacher
-      );
-      sendCreated(res, assignment, "Teacher assigned to class successfully");
-    }
-  );
-
-  // Remove teacher from class (admin only)
-  static removeTeacherFromClass = asyncHandler(
-    async (req: Request, res: Response) => {
-      const { teacherId, classId } = req.body;
-
-      if (!teacherId || !classId) {
-        sendBadRequest(res, "Teacher ID and Class ID are required");
-        return;
-      }
-
-      await UserService.removeTeacherFromClass(teacherId, classId);
-      sendSuccess(res, null, "Teacher removed from class successfully");
+      const subjects = await UserService.getTeacherSubjects(teacherId);
+      sendSuccess(res, subjects, "Teacher subjects retrieved successfully");
     }
   );
 }
