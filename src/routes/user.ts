@@ -39,6 +39,8 @@ router.get(
   UserController.getTeacherSubjects
 );
 
+router.post("/live-location", UserController.createLiveLocation);
+
 // Routes accessible by admins only
 router.get("/", adminOnly, UserController.getAll);
 router.get("/all", adminOnly, UserController.getAllUsers);

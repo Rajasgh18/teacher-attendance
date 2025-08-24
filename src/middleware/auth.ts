@@ -53,7 +53,6 @@ export const authenticate = async (
 
     // Verify token
     const decoded = jwt.verify(token, config.jwt.secret) as JwtPayload;
-
     // Add user to request
     req.user = decoded;
 

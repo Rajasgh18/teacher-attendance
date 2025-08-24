@@ -446,4 +446,24 @@ export class UserController {
       sendSuccess(res, subjects, "Teacher subjects retrieved successfully");
     }
   );
+
+  // Create live location
+  static createLiveLocation = asyncHandler(async (req: Request, res: Response) => {
+    const { latitude, longitude } = req.body;
+
+    const userId = (req as any).user?.userId;
+
+    if (!userId) {
+      sendBadRequest(res, "User ID is required");
+      return;
+    }
+
+    if (!latitude || !longitude) {
+      sendBadRequest(res, "Latitude and longitude are required");
+      return;
+    }
+
+    const liveLocation = await UserService.createLiveLocation(userId, latitude, longitude);
+    sendSuccess(res, liveLocation, "Live location created successfully");
+  });
 }

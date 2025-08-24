@@ -14,6 +14,7 @@ import {
   classes,
   teacherAttendance,
   subjects,
+  liveLocations,
 } from "@/db/schema";
 import {
   NotFoundError,
@@ -654,5 +655,19 @@ export class UserService {
       )
       .limit(limit)
       .orderBy(asc(users.firstName));
+  }
+
+  // Create live location
+  static async createLiveLocation(userId: string, latitude: number, longitude: number) {
+    return await db.insert(liveLocations).values({ 
+      userId, 
+      latitude: latitude.toString(), 
+      longitude: longitude.toString() 
+    });
+  }
+
+  // Get live location
+  static async getLiveLocation(userId: string) {
+    return await db.select().from(liveLocations).where(eq(liveLocations.userId, userId));
   }
 }

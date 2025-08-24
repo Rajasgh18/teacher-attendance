@@ -243,6 +243,28 @@ export const studentAttendanceRelations = relations(
   })
 );
 
+export const liveLocations = pgTable("live_locations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  latitude: numeric("latitude").notNull(),
+  longitude: numeric("longitude").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const liveLocationsRelations = relations(liveLocations, ({ one }) => ({
+  user: one(users, {
+    fields: [liveLocations.userId],
+    references: [users.id],
+  }),
+}));
+
 // Export types
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -260,3 +282,5 @@ export type Subject = typeof subjects.$inferSelect;
 export type NewSubject = typeof subjects.$inferInsert;
 export type Mark = typeof marks.$inferSelect;
 export type NewMark = typeof marks.$inferInsert;
+export type LiveLocation = typeof liveLocations.$inferSelect;
+export type NewLiveLocation = typeof liveLocations.$inferInsert;
