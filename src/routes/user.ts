@@ -38,7 +38,7 @@ router.get(
   selfOrAdmin("teacherId"),
   UserController.getTeacherSubjects
 );
-
+router.put("/:id/change-password", selfOrAdmin, UserController.changePassword);
 router.post("/live-location", UserController.createLiveLocation);
 
 // Routes accessible by admins only
@@ -55,7 +55,6 @@ router.post("/", adminOnly, UserController.create);
 
 router.put("/:id", selfOrAdmin, UserController.update);
 router.put("/:id/password", selfOrAdmin, UserController.updatePassword);
-router.put("/:id/change-password", selfOrAdmin, UserController.changePassword);
 
 router.delete("/:id", adminOnly, UserController.delete);
 

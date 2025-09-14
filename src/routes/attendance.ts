@@ -4,7 +4,7 @@ import {
   adminOnly,
   authenticate,
   teacherOrAdmin,
-  teacherAssignedToStudentClassOrAdmin,
+  teacherFromSameSchoolAsStudentOrAdmin,
 } from "@/middleware/auth";
 import { AttendanceController } from "@/controllers/attendanceController";
 
@@ -16,19 +16,19 @@ router.use(authenticate);
 // Routes accessible by teachers assigned to the class and admins
 router.get(
   "/student/class/:classId",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   AttendanceController.getStudentAttendanceByClass
 );
 
 router.get(
   "/student/:studentId",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   AttendanceController.getStudentAttendanceByStudent
 );
 
 router.get(
   "/student/date/:date",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   AttendanceController.getStudentAttendanceByDate
 );
 
@@ -42,7 +42,7 @@ router.get(
 // Routes accessible by teachers assigned to the class and admins
 router.post(
   "/student",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   AttendanceController.createStudentAttendance
 );
 router.post(
@@ -53,7 +53,7 @@ router.post(
 
 router.put(
   "/student/:id",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   AttendanceController.updateStudentAttendance
 );
 

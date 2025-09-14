@@ -4,6 +4,8 @@ import {
   joiSchemas,
   userValidations,
   validateWithJoi,
+  createValidationMiddleware,
+  commonValidations,
 } from "@/middleware/validation";
 import { authenticate } from "@/middleware/auth";
 import { authRateLimiter } from "@/middleware/security";
@@ -29,7 +31,7 @@ router.put(
 );
 router.post(
   "/forgot-password",
-  userValidations.email,
+  createValidationMiddleware([commonValidations.employeeId]),
   AuthController.forgotPassword
 );
 router.post(

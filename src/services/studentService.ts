@@ -1,11 +1,6 @@
 import { eq, and, like, asc } from "drizzle-orm";
 
-import {
-  users,
-  classes,
-  students,
-  studentAttendance,
-} from "@/db/schema";
+import { users, classes, students, studentAttendance } from "@/db/schema";
 import { db } from "@/db";
 import type { NewStudent } from "@/db/schema";
 import { NotFoundError, ConflictError } from "@/types";
@@ -190,15 +185,17 @@ export class StudentService {
       throw new ConflictError("Student with this ID already exists");
     }
 
-    // Check if student with same email already exists
-    const existingEmail = await db
-      .select()
-      .from(students)
-      .where(eq(students.email, data.email))
-      .limit(1);
+    if (data.email) {
+      // Check if student with same email already exists
+      const existingEmail = await db
+        .select()
+        .from(students)
+        .where(eq(students.email, data.email))
+        .limit(1);
 
-    if (existingEmail.length) {
-      throw new ConflictError("Student with this email already exists");
+      if (existingEmail.length) {
+        throw new ConflictError("Student with this email already exists");
+      }
     }
 
     const result = await db.insert(students).values(data).returning();

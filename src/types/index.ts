@@ -19,8 +19,12 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 // User Types
 export interface User {
   id: string;
-  email: string;
-  name: string;
+  email?: string;
+  employeeId: string;
+  department?: string;
+  phone?: string;
+  address?: string;
+  hireDate: string;
   role: UserRole;
   isActive: boolean;
   createdAt: Date;
@@ -30,6 +34,7 @@ export interface User {
 export enum UserRole {
   ADMIN = "admin",
   TEACHER = "teacher",
+  PRINCIPAL = "principal",
 }
 
 // Attendance Types
@@ -57,7 +62,7 @@ export enum AttendanceStatus {
 // JWT Types
 export interface JwtPayload {
   userId: string;
-  email: string;
+  employeeId: string;
   role: UserRole;
   iat?: number;
   exp?: number;
@@ -194,16 +199,18 @@ export interface RateLimitConfig {
 // Type for user without password hash (for security)
 export type UserWithoutPassword = {
   id: string;
-  email: string;
+  email?: string | null;
+  employeeId: string;
+  schoolId: string;
   firstName: string;
-  lastName: string;
-  role: "admin" | "teacher";
+  lastName: string | null;
+  role: "admin" | "teacher" | "principal";
   createdAt: Date;
   updatedAt: Date;
 };
 
 export interface LoginCredentials {
-  email: string;
+  employeeId: string;
   password: string;
 }
 
@@ -213,10 +220,12 @@ export interface RegisterData {
   firstName: string;
   lastName: string;
   role: "admin" | "teacher";
+  employeeId?: string;
+  schoolId?: string;
 }
 
 export interface TokenPayload {
   userId: string;
-  email: string;
+  employeeId: string;
   role: string;
 }

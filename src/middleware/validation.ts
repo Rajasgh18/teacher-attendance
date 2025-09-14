@@ -135,7 +135,7 @@ export const joiSchemas = {
   }),
 
   login: Joi.object({
-    email: Joi.string().email().required(),
+    employeeId: Joi.string().min(3).max(20).required(),
     password: Joi.string().required(),
   }),
 
@@ -265,11 +265,13 @@ export const userValidations = {
   ]),
 
   login: createValidationMiddleware([
-    commonValidations.email,
+    commonValidations.employeeId,
     body("password").notEmpty().withMessage("Password is required"),
   ]),
 
   email: createValidationMiddleware([commonValidations.email]),
+  
+  employeeId: createValidationMiddleware([commonValidations.employeeId]),
 };
 
 export const teacherValidations = {

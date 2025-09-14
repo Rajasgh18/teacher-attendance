@@ -28,12 +28,14 @@ export class AuthService {
       firstName: data.firstName,
       lastName: data.lastName,
       role: data.role,
+      employeeId: data.employeeId || `EMP${Date.now()}`, // Generate employee ID if not provided
+      schoolId: data.schoolId || "DEFAULT_SCHOOL", // Use default school ID
     });
 
     // Generate tokens
     const tokenPayload: TokenPayload = {
       userId: user.id,
-      email: user.email,
+      employeeId: user.employeeId,
       role: user.role,
     };
 
@@ -48,8 +50,8 @@ export class AuthService {
     token: string;
     refreshToken: string;
   }> {
-    // Find user by email
-    const user = await UserService.getByEmail(credentials.email);
+    // Find user by employee ID
+    const user = await UserService.getByEmployeeId(credentials.employeeId);
     if (!user) {
       throw new Error("Invalid credentials");
     }
@@ -66,7 +68,7 @@ export class AuthService {
     // Generate tokens
     const tokenPayload: TokenPayload = {
       userId: user.id,
-      email: user.email,
+      employeeId: user.employeeId,
       role: user.role,
     };
 
@@ -95,7 +97,7 @@ export class AuthService {
       // Generate new tokens
       const newTokenPayload: TokenPayload = {
         userId: user.id,
-        email: user.email,
+        employeeId: user.employeeId,
         role: user.role,
       };
 
@@ -132,9 +134,9 @@ export class AuthService {
     await UserService.updatePassword(userId, newPassword);
   }
 
-  static async forgotPassword(email: string): Promise<void> {
+  static async forgotPassword(employeeId: string): Promise<void> {
     // Check if user exists
-    const user = await UserService.getByEmail(email);
+    const user = await UserService.getByEmployeeId(employeeId);
     if (!user) {
       // Don't reveal if user exists or not for security
       return;
@@ -142,7 +144,7 @@ export class AuthService {
 
     // TODO: Implement email sending logic
     // For now, just log the request
-    console.log(`Password reset requested for: ${email}`);
+    console.log(`Password reset requested for employee ID: ${employeeId}`);
   }
 
   static async resetPassword(

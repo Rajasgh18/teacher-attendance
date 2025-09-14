@@ -59,6 +59,7 @@ export class StudentController {
       dateOfBirth,
       gender,
       classId,
+      schoolId,
       isActive = true,
     } = req.body;
 
@@ -71,7 +72,8 @@ export class StudentController {
       !address ||
       !dateOfBirth ||
       !gender ||
-      !classId
+      !classId ||
+      !schoolId
     ) {
       sendBadRequest(res, "All required fields must be provided");
       return;
@@ -107,6 +109,11 @@ export class StudentController {
       return;
     }
 
+    if (!schoolId) {
+      sendBadRequest(res, "School ID is required");
+      return;
+    }
+
     const student = await StudentService.create({
       studentId,
       firstName,
@@ -116,6 +123,7 @@ export class StudentController {
       address,
       dateOfBirth,
       gender,
+      schoolId,
       classId,
       isActive,
     });

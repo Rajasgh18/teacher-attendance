@@ -51,7 +51,19 @@ export class ClassController {
 
   // Create new class (admin only)
   static create = asyncHandler(async (req: Request, res: Response) => {
-    const { name, grade, section, academicYear, isActive = true } = req.body;
+    const {
+      schoolId,
+      name,
+      grade,
+      section,
+      academicYear,
+      isActive = true,
+    } = req.body;
+
+    if (!schoolId) {
+      sendBadRequest(res, "School ID is required");
+      return;
+    }
 
     if (!name || !grade || !academicYear) {
       sendBadRequest(res, "Name, grade, and academic year are required");
@@ -74,6 +86,7 @@ export class ClassController {
     }
 
     const classData = await ClassService.create({
+      schoolId,
       name,
       grade,
       section,

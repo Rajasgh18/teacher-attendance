@@ -33,9 +33,11 @@ export class AuthController {
           user: {
             id: result.user.id,
             email: result.user.email,
+            employeeId: result.user.employeeId,
             firstName: result.user.firstName,
             lastName: result.user.lastName,
             role: result.user.role,
+            schoolId: result.user.schoolId,
             createdAt: result.user.createdAt,
             updatedAt: result.user.updatedAt,
           },
@@ -59,14 +61,14 @@ export class AuthController {
   });
 
   static login = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
+    const { employeeId, password } = req.body;
 
     const credentials: LoginCredentials = {
-      email,
+      employeeId,
       password,
     };
 
-    try {
+    try {      
       const result = await AuthService.login(credentials);
       sendSuccess(
         res,
@@ -74,9 +76,11 @@ export class AuthController {
           user: {
             id: result.user.id,
             email: result.user.email,
+            employeeId: result.user.employeeId,
             firstName: result.user.firstName,
             lastName: result.user.lastName,
             role: result.user.role,
+            schoolId: result.user.schoolId,
             createdAt: result.user.createdAt,
             updatedAt: result.user.updatedAt,
           },
@@ -152,11 +156,14 @@ export class AuthController {
         user: {
           id: user.id,
           email: user.email,
+          employeeId: user.employeeId,
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
+          schoolId: user.schoolId,
           createdAt: user.createdAt,
           updatedAt: user.updatedAt,
+          school: user.school,
         },
       },
       "Profile retrieved successfully"
@@ -191,10 +198,10 @@ export class AuthController {
   });
 
   static forgotPassword = asyncHandler(async (req: Request, res: Response) => {
-    const { email } = req.body;
+    const { employeeId } = req.body;
 
     try {
-      await AuthService.forgotPassword(email);
+      await AuthService.forgotPassword(employeeId);
       sendSuccess(res, null, "Password reset email sent successfully");
     } catch (error) {
       throw error;

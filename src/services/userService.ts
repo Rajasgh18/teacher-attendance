@@ -15,6 +15,7 @@ import {
   teacherAttendance,
   subjects,
   liveLocations,
+  schools,
 } from "@/db/schema";
 import {
   NotFoundError,
@@ -105,8 +106,12 @@ export class UserService {
     };
   }
 
-  // Get all classes of a user
+  // Get all classes of a user's school
   static async getClasses(userId: string) {
+    // First get the user to get their schoolId
+    const user = await this.getById(userId);
+    
+    // Then get all classes for that school
     return await db
       .select({
         id: classes.id,
@@ -116,9 +121,8 @@ export class UserService {
         academicYear: classes.academicYear,
         isActive: classes.isActive,
       })
-      .from(teacherAssignments)
-      .leftJoin(classes, eq(teacherAssignments.classId, classes.id))
-      .where(eq(teacherAssignments.teacherId, userId))
+      .from(classes)
+      .where(eq(classes.schoolId, user.schoolId))
       .orderBy(asc(classes.grade));
   }
 
@@ -132,6 +136,7 @@ export class UserService {
         lastName: users.lastName,
         role: users.role,
         employeeId: users.employeeId,
+        schoolId: users.schoolId,
         department: users.department,
         phone: users.phone,
         address: users.address,
@@ -139,9 +144,11 @@ export class UserService {
         isActive: users.isActive,
         createdAt: users.createdAt,
         updatedAt: users.updatedAt,
+        school: schools,
       })
       .from(users)
-      .where(eq(users.id, id));
+      .where(eq(users.id, id))
+      .leftJoin(schools, eq(users.schoolId, schools.id));
 
     if (!user) {
       throw new NotFoundError("User not found");
@@ -181,6 +188,7 @@ export class UserService {
 
   // Get teacher by employee ID
   static async getByEmployeeId(employeeId: string) {
+    
     const [user] = await db
       .select({
         id: users.id,
@@ -188,7 +196,9 @@ export class UserService {
         firstName: users.firstName,
         lastName: users.lastName,
         role: users.role,
+        passwordHash: users.passwordHash,
         employeeId: users.employeeId,
+        schoolId: users.schoolId,
         department: users.department,
         phone: users.phone,
         address: users.address,
@@ -198,10 +208,9 @@ export class UserService {
         updatedAt: users.updatedAt,
       })
       .from(users)
-      .where(and(eq(users.employeeId, employeeId), eq(users.role, "teacher")));
-
+      .where(eq(users.employeeId, employeeId));
     if (!user) {
-      throw new NotFoundError("Teacher not found");
+      throw new NotFoundError("User not found");
     }
 
     return user;
@@ -323,10 +332,10 @@ export class UserService {
     const existingUser = await db
       .select({ id: users.id })
       .from(users)
-      .where(eq(users.email, userData.email));
+      .where(eq(users.employeeId, userData.employeeId));
 
     if (existingUser.length > 0) {
-      throw new ConflictError("User with this email already exists");
+      throw new ConflictError("User with this employee ID already exists");
     }
 
     // Check if employee ID already exists for teachers
@@ -358,6 +367,7 @@ export class UserService {
         lastName: users.lastName,
         role: users.role,
         employeeId: users.employeeId,
+        schoolId: users.schoolId,
         department: users.department,
         phone: users.phone,
         address: users.address,
@@ -429,6 +439,7 @@ export class UserService {
         lastName: users.lastName,
         role: users.role,
         employeeId: users.employeeId,
+        schoolId: users.schoolId,
         department: users.department,
         phone: users.phone,
         address: users.address,

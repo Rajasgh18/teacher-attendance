@@ -4,7 +4,7 @@ import {
   authenticate,
   adminOnly,
   teacherOrAdmin,
-  teacherAssignedToStudentClassOrAdmin,
+  teacherFromSameSchoolAsStudentOrAdmin,
 } from "@/middleware/auth";
 import { studentRateLimiter } from "@/middleware/security";
 import { StudentController } from "@/controllers/studentController";
@@ -24,25 +24,25 @@ router.use(authenticate);
 router.get("/", teacherOrAdmin, StudentController.getAll);
 router.get("/gender/:gender", teacherOrAdmin, StudentController.getByGender);
 
-// Routes accessible by teachers assigned to the class and admins
+// Routes accessible by teachers from same school and admins
 router.get(
   "/class/:classId",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   StudentController.getByClass
 );
 router.get(
   "/:id",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   StudentController.getById
 );
 router.get(
   "/student/:studentId",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   StudentController.getByStudentId
 );
 router.get(
   "/:studentId/attendance",
-  teacherAssignedToStudentClassOrAdmin(),
+  teacherFromSameSchoolAsStudentOrAdmin(),
   StudentController.getAttendance
 );
 

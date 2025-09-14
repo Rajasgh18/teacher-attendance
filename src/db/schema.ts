@@ -13,23 +13,35 @@ import {
 import { relations } from "drizzle-orm";
 
 // Enums
-export const userRoleEnum = pgEnum("user_role", ["admin", "teacher"]);
+export const userRoleEnum = pgEnum("user_role", [
+  "admin",
+  "teacher",
+  "principal",
+]);
 export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
 export const attendanceStatusEnum = pgEnum("attendance_status", [
   "present",
   "absent",
 ]);
 
+export const schools = pgTable("schools", {
+  id: varchar("id").primaryKey(),
+  name: varchar("name", { length: 100 }).notNull(),
+});
+
 // Users table (merged with teachers)
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
+  schoolId: varchar("school_id", { length: 15 })
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  email: varchar("email", { length: 255 }).unique(),
   passwordHash: varchar("password_hash", { length: 255 }).notNull(),
   role: userRoleEnum("role").notNull(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
-  lastName: varchar("last_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }),
   // Teacher-specific fields (nullable for non-teachers)
-  employeeId: varchar("employee_id", { length: 50 }).unique(),
+  employeeId: varchar("employee_id", { length: 50 }).notNull().unique(),
   department: varchar("department", { length: 100 }),
   phone: varchar("phone", { length: 20 }),
   address: text("address"),
@@ -46,11 +58,13 @@ export const users = pgTable("users", {
 // Classes table
 export const classes = pgTable("classes", {
   id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: varchar("school_id", { length: 15 })
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(),
   grade: varchar("grade", { length: 20 }).notNull(),
   section: varchar("section", { length: 10 }).notNull(),
   academicYear: varchar("academic_year", { length: 20 }).notNull(),
-  description: text("description"),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -85,13 +99,16 @@ export const teacherAssignments = pgTable("teacher_assignments", {
 // Students table
 export const students = pgTable("students", {
   id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: varchar("school_id", { length: 15 })
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
   studentId: varchar("student_id", { length: 50 }).notNull().unique(),
   firstName: varchar("first_name", { length: 100 }).notNull(),
   lastName: varchar("last_name", { length: 100 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull().unique(),
-  phone: varchar("phone", { length: 20 }).notNull(),
-  address: text("address").notNull(),
-  dateOfBirth: date("date_of_birth").notNull(),
+  email: varchar("email", { length: 255 }).unique(),
+  phone: varchar("phone", { length: 20 }),
+  address: text("address"),
+  dateOfBirth: date("date_of_birth"),
   gender: genderEnum("gender").notNull(),
   classId: uuid("class_id")
     .notNull()
@@ -179,6 +196,12 @@ export const marks = pgTable("marks", {
     .notNull(),
 });
 
+export const schoolRelations = relations(schools, ({ many }) => ({
+  classes: many(classes),
+  users: many(users),
+  students: many(students),
+}));
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   assignments: many(teacherAssignments),
@@ -192,20 +215,23 @@ export const classesRelations = relations(classes, ({ many }) => ({
   studentAttendance: many(studentAttendance),
 }));
 
-export const teacherAssignmentsRelations = relations(teacherAssignments, ({ one }) => ({
-  teacher: one(users, {
-    fields: [teacherAssignments.teacherId],
-    references: [users.id],
-  }),
-  class: one(classes, {
-    fields: [teacherAssignments.classId],
-    references: [classes.id],
-  }),
-  subject: one(subjects, {
-    fields: [teacherAssignments.subjectId],
-    references: [subjects.id],
-  }),
-}));
+export const teacherAssignmentsRelations = relations(
+  teacherAssignments,
+  ({ one }) => ({
+    teacher: one(users, {
+      fields: [teacherAssignments.teacherId],
+      references: [users.id],
+    }),
+    class: one(classes, {
+      fields: [teacherAssignments.classId],
+      references: [classes.id],
+    }),
+    subject: one(subjects, {
+      fields: [teacherAssignments.subjectId],
+      references: [subjects.id],
+    }),
+  })
+);
 
 export const studentsRelations = relations(students, ({ one, many }) => ({
   class: one(classes, {
@@ -284,3 +310,5 @@ export type Mark = typeof marks.$inferSelect;
 export type NewMark = typeof marks.$inferInsert;
 export type LiveLocation = typeof liveLocations.$inferSelect;
 export type NewLiveLocation = typeof liveLocations.$inferInsert;
+export type School = typeof schools.$inferSelect;
+export type NewSchool = typeof schools.$inferInsert;

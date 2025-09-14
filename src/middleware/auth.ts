@@ -274,6 +274,132 @@ export const teacherAssignedToStudentClassOrAdmin = () => {
   };
 };
 
+// Teacher from same school or admin middleware (for class access)
+export const teacherFromSameSchoolOrAdmin = () => {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    if (!req.user) {
+      throw new AuthenticationError("Authentication required");
+    }
+
+    // Admin can access all classes
+    if (req.user.role === UserRole.ADMIN) {
+      return next();
+    }
+
+    // For teachers, check if they are from the same school as the class
+    if (req.user.role === UserRole.TEACHER) {
+      const classId = req.params.id || req.params.classId;
+
+      if (!classId) {
+        throw new AuthorizationError("Class ID is required");
+      }
+
+      try {
+        // Import here to avoid circular dependencies
+        const { UserService } = await import("@/services/userService");
+        const { ClassService } = await import("@/services/classService");
+
+        // Get user's school ID
+        const user = await UserService.getById(req.user.userId);
+        
+        // Get class details
+        const classData = await ClassService.getById(classId);
+
+        if (user.schoolId !== classData.schoolId) {
+          throw new AuthorizationError(
+            "Access denied. You can only access classes from your school."
+          );
+        }
+
+        next();
+      } catch (error) {
+        if (error instanceof AuthorizationError) {
+          throw error;
+        }
+        throw new AuthorizationError("Failed to verify school access");
+      }
+    } else {
+      throw new AuthorizationError(
+        "Access denied. Required roles: teacher, admin"
+      );
+    }
+  };
+};
+
+// Teacher from same school or admin middleware (for student access)
+export const teacherFromSameSchoolAsStudentOrAdmin = () => {
+  return async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> => {
+    if (!req.user) {
+      throw new AuthenticationError("Authentication required");
+    }
+
+    // Admin can access all students
+    if (req.user.role === UserRole.ADMIN || req.user.role === UserRole.PRINCIPAL) {
+      return next();
+    }
+
+    // For teachers, check if they are from the same school as the student
+    if (req.user.role === UserRole.TEACHER) {
+      const studentId = req.params.id || req.params.studentId;
+      const classId = req.params.classId;
+
+      if (!studentId && !classId) {
+        throw new AuthorizationError("Student ID or Class ID is required");
+      }
+
+      try {
+        // Import here to avoid circular dependencies
+        const { UserService } = await import("@/services/userService");
+        const { StudentService } = await import("@/services/studentService");
+        const { ClassService } = await import("@/services/classService");
+
+        // Get user's school ID
+        const user = await UserService.getById(req.user.userId);
+
+        let isFromSameSchool = false;
+
+        if (classId) {
+          // Direct class access - check if class is from same school
+          const classData = await ClassService.getById(classId);
+          isFromSameSchool = user.schoolId === classData.schoolId;
+        } else if (studentId) {
+          // Student access - check if student's class is from same school
+          const student = await StudentService.getById(studentId);
+          const classData = await ClassService.getById(student.classId);
+          isFromSameSchool = user.schoolId === classData.schoolId;
+        }
+
+        if (!isFromSameSchool) {
+          throw new AuthorizationError(
+            "Access denied. You can only access students from your school."
+          );
+        }
+
+        next();
+      } catch (error) {
+        if (error instanceof AuthorizationError) {
+          throw error;
+        }
+        throw new AuthorizationError(
+          "Failed to verify school access for student"
+        );
+      }
+    } else {
+      throw new AuthorizationError(
+        "Access denied. Required roles: teacher, admin"
+      );
+    }
+  };
+};
+
 // Generate JWT token
 export const generateToken = (
   payload: Omit<JwtPayload, "iat" | "exp">

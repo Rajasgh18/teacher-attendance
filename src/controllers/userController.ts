@@ -119,6 +119,7 @@ export class UserController {
   // Create new user (admin only)
   static create = asyncHandler(async (req: Request, res: Response) => {
     const {
+      schoolId,
       email,
       password,
       firstName,
@@ -132,7 +133,7 @@ export class UserController {
       isActive = true,
     } = req.body;
 
-    if (!email || !password || !firstName || !lastName || !role) {
+    if (!email || !password || !firstName || !lastName || !role || !schoolId) {
       sendBadRequest(res, "All required fields must be provided");
       return;
     }
@@ -189,6 +190,7 @@ export class UserController {
     }
 
     const user = await UserService.create({
+      schoolId,
       email,
       password,
       firstName,
@@ -448,22 +450,28 @@ export class UserController {
   );
 
   // Create live location
-  static createLiveLocation = asyncHandler(async (req: Request, res: Response) => {
-    const { latitude, longitude } = req.body;
+  static createLiveLocation = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { latitude, longitude } = req.body;
 
-    const userId = (req as any).user?.userId;
+      const userId = (req as any).user?.userId;
 
-    if (!userId) {
-      sendBadRequest(res, "User ID is required");
-      return;
+      if (!userId) {
+        sendBadRequest(res, "User ID is required");
+        return;
+      }
+
+      if (!latitude || !longitude) {
+        sendBadRequest(res, "Latitude and longitude are required");
+        return;
+      }
+
+      const liveLocation = await UserService.createLiveLocation(
+        userId,
+        latitude,
+        longitude
+      );
+      sendSuccess(res, liveLocation, "Live location created successfully");
     }
-
-    if (!latitude || !longitude) {
-      sendBadRequest(res, "Latitude and longitude are required");
-      return;
-    }
-
-    const liveLocation = await UserService.createLiveLocation(userId, latitude, longitude);
-    sendSuccess(res, liveLocation, "Live location created successfully");
-  });
+  );
 }
