@@ -17,12 +17,7 @@ import {
   liveLocations,
   schools,
 } from "@/db/schema";
-import {
-  NotFoundError,
-  ConflictError,
-  UserWithoutPassword,
-  AttendanceStatus,
-} from "@/types";
+import { NotFoundError, ConflictError, UserWithoutPassword } from "@/types";
 
 export class UserService {
   // Get all users with pagination and search
@@ -33,10 +28,19 @@ export class UserService {
       search?: string;
       role?: string;
       department?: string;
+      schoolId?: string;
       isActive?: boolean;
     } = {}
   ) {
-    const { page = 1, limit = 10, search, role, department, isActive } = query;
+    const {
+      page = 1,
+      limit = 10,
+      search,
+      role,
+      department,
+      schoolId,
+      isActive,
+    } = query;
     const offset = (page - 1) * limit;
 
     let whereConditions = [];
@@ -57,6 +61,10 @@ export class UserService {
 
     if (department) {
       whereConditions.push(eq(users.department, department));
+    }
+
+    if (schoolId) {
+      whereConditions.push(eq(users.schoolId, schoolId));
     }
 
     if (isActive !== undefined) {
@@ -110,7 +118,7 @@ export class UserService {
   static async getClasses(userId: string) {
     // First get the user to get their schoolId
     const user = await this.getById(userId);
-    
+
     // Then get all classes for that school
     return await db
       .select({
@@ -120,6 +128,7 @@ export class UserService {
         section: classes.section,
         academicYear: classes.academicYear,
         isActive: classes.isActive,
+        schoolId: classes.schoolId,
       })
       .from(classes)
       .where(eq(classes.schoolId, user.schoolId))
@@ -188,7 +197,6 @@ export class UserService {
 
   // Get teacher by employee ID
   static async getByEmployeeId(employeeId: string) {
-    
     const [user] = await db
       .select({
         id: users.id,
@@ -669,16 +677,23 @@ export class UserService {
   }
 
   // Create live location
-  static async createLiveLocation(userId: string, latitude: number, longitude: number) {
-    return await db.insert(liveLocations).values({ 
-      userId, 
-      latitude: latitude.toString(), 
-      longitude: longitude.toString() 
+  static async createLiveLocation(
+    userId: string,
+    latitude: number,
+    longitude: number
+  ) {
+    return await db.insert(liveLocations).values({
+      userId,
+      latitude: latitude.toString(),
+      longitude: longitude.toString(),
     });
   }
 
   // Get live location
   static async getLiveLocation(userId: string) {
-    return await db.select().from(liveLocations).where(eq(liveLocations.userId, userId));
+    return await db
+      .select()
+      .from(liveLocations)
+      .where(eq(liveLocations.userId, userId));
   }
 }

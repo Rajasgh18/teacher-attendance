@@ -36,6 +36,7 @@ export class AuthService {
     const tokenPayload: TokenPayload = {
       userId: user.id,
       employeeId: user.employeeId,
+      schoolId: user.schoolId,
       role: user.role,
     };
 
@@ -69,6 +70,7 @@ export class AuthService {
     const tokenPayload: TokenPayload = {
       userId: user.id,
       employeeId: user.employeeId,
+      schoolId: user.schoolId,
       role: user.role,
     };
 
@@ -98,6 +100,7 @@ export class AuthService {
       const newTokenPayload: TokenPayload = {
         userId: user.id,
         employeeId: user.employeeId,
+        schoolId: user.schoolId,
         role: user.role,
       };
 

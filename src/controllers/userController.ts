@@ -9,7 +9,8 @@ import { AttendanceStatus } from "@/types";
 export class UserController {
   // Get all users (admin only)
   static getAll = asyncHandler(async (req: Request, res: Response) => {
-    const { page, limit, search, role, department, isActive } = req.query;
+    const { page, limit, search, role, department, isActive, schoolId } =
+      req.query;
 
     const query: any = {};
     if (page) query.page = parseInt(page as string);
@@ -17,6 +18,7 @@ export class UserController {
     if (search) query.search = search as string;
     if (role) query.role = role as string;
     if (department) query.department = department as string;
+    if (schoolId) query.schoolId = schoolId as string;
     if (isActive !== undefined) query.isActive = isActive === "true";
 
     const result = await UserService.getAll(query);

@@ -117,6 +117,8 @@ export const adminOnly = authorize(UserRole.ADMIN);
 // Teacher or admin middleware
 export const teacherOrAdmin = authorize(UserRole.TEACHER, UserRole.ADMIN);
 
+export const adminOrPrincipal = authorize(UserRole.ADMIN, UserRole.PRINCIPAL);
+
 // Principal or admin middleware
 // Removed principal role - no longer needed
 
@@ -166,7 +168,9 @@ export const teacherAssignedToClassOrAdmin = () => {
 
     // For teachers, check if they are assigned to the class
     if (req.user.role === UserRole.TEACHER) {
-      const classId = req.params.id || req.params.classId;
+      const classId =
+        (req.params && (req.params.id || req.params.classId)) ||
+        (req.query && (req.query.classId as string));
 
       if (!classId) {
         throw new AuthorizationError("Class ID is required");
@@ -177,7 +181,9 @@ export const teacherAssignedToClassOrAdmin = () => {
         const { UserService } = await import("@/services/userService");
 
         // Get teacher assignments directly
-        const assignments = await UserService.getTeacherAssignments(req.user.userId);
+        const assignments = await UserService.getTeacherAssignments(
+          req.user.userId
+        );
         const isAssigned = assignments.some(
           assignment => assignment.classId === classId
         );
@@ -222,7 +228,7 @@ export const teacherAssignedToStudentClassOrAdmin = () => {
     // For teachers, check if they are assigned to the student's class
     if (req.user.role === UserRole.TEACHER) {
       const studentId = req.params.id || req.params.studentId;
-      const classId = req.params.classId;
+      const classId = (req.params.classId as string) || (req.query.classId as string);
 
       if (!studentId && !classId) {
         throw new AuthorizationError("Student ID or Class ID is required");
@@ -234,7 +240,9 @@ export const teacherAssignedToStudentClassOrAdmin = () => {
         const { StudentService } = await import("@/services/studentService");
 
         // Get teacher assignments directly
-        const assignments = await UserService.getTeacherAssignments(req.user.userId);
+        const assignments = await UserService.getTeacherAssignments(
+          req.user.userId
+        );
 
         let isAssigned = false;
 
@@ -320,7 +328,7 @@ export const teacherFromSameSchoolOrAdmin = () => {
         if (error instanceof AuthorizationError) {
           throw error;
         }
-        throw new AuthorizationError("Failed to verify school access");
+        throw new AuthorizationError("Failed to verify school access: " + error);
       }
     } else {
       throw new AuthorizationError(
@@ -342,14 +350,21 @@ export const teacherFromSameSchoolAsStudentOrAdmin = () => {
     }
 
     // Admin can access all students
-    if (req.user.role === UserRole.ADMIN || req.user.role === UserRole.PRINCIPAL) {
+    if (
+      req.user.role === UserRole.ADMIN ||
+      req.user.role === UserRole.PRINCIPAL
+    ) {
       return next();
     }
 
     // For teachers, check if they are from the same school as the student
     if (req.user.role === UserRole.TEACHER) {
-      const studentId = req.params.id || req.params.studentId;
-      const classId = req.params.classId;
+      const studentId = (req.params && (req.params.id || req.params.studentId)) as
+        | string
+        | undefined;
+      const classId =
+        (req.params && (req.params.classIddjkddd as string)) ||
+        (req.query && (req.query.classId as string));
 
       if (!studentId && !classId) {
         throw new AuthorizationError("Student ID or Class ID is required");

@@ -6,23 +6,22 @@ import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
 
 export class StudentController {
   // Get all students (accessible by teachers and admins)
-  static getAll = asyncHandler(async (req: Request, res: Response) => {
-    const { page, limit, search, classId, gender, isActive } = req.query;
+  static getAll = async (req: Request, res: Response) => {
+    const { page, limit, search, classId, schoolId } = req.query;
 
     const query: any = {};
     if (page) query.page = parseInt(page as string);
     if (limit) query.limit = parseInt(limit as string);
     if (search) query.search = search as string;
     if (classId) query.classId = classId as string;
-    if (gender) query.gender = gender as string;
-    if (isActive !== undefined) query.isActive = isActive === "true";
+    if (schoolId) query.schoolId = schoolId as string;
 
     const result = await StudentService.getAll(query);
     sendSuccess(res, result, "Students retrieved successfully");
-  });
+  };
 
   // Get student by ID (accessible by teachers and admins)
-  static getById = asyncHandler(async (req: Request, res: Response) => {
+  static getById = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -32,23 +31,10 @@ export class StudentController {
 
     const student = await StudentService.getById(id);
     sendSuccess(res, student, "Student retrieved successfully");
-  });
-
-  // Get student by student ID (accessible by teachers and admins)
-  static getByStudentId = asyncHandler(async (req: Request, res: Response) => {
-    const { studentId } = req.params;
-
-    if (!studentId) {
-      sendBadRequest(res, "Student ID is required");
-      return;
-    }
-
-    const student = await StudentService.getByStudentId(studentId);
-    sendSuccess(res, student, "Student retrieved successfully");
-  });
+  };
 
   // Create new student (admin only)
-  static create = asyncHandler(async (req: Request, res: Response) => {
+  static create = async (req: Request, res: Response) => {
     const {
       studentId,
       firstName,
@@ -129,10 +115,10 @@ export class StudentController {
     });
 
     sendCreated(res, student, "Student created successfully");
-  });
+  };
 
   // Update student (admin only)
-  static update = asyncHandler(async (req: Request, res: Response) => {
+  static update = async (req: Request, res: Response) => {
     const { id } = req.params;
     const {
       studentId,
@@ -219,10 +205,10 @@ export class StudentController {
 
     const student = await StudentService.update(id, updateData);
     sendSuccess(res, student, "Student updated successfully");
-  });
+  };
 
   // Delete student (soft delete - admin only)
-  static delete = asyncHandler(async (req: Request, res: Response) => {
+  static delete = async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -232,14 +218,14 @@ export class StudentController {
 
     await StudentService.delete(id);
     sendSuccess(res, null, "Student deleted successfully");
-  });
+  };
 
   // Get student's attendance records (accessible by teachers and admins)
-  static getAttendance = asyncHandler(async (req: Request, res: Response) => {
-    const { studentId } = req.params;
+  static getAttendance = async (req: Request, res: Response) => {
+    const { id } = req.params;
     const { startDate, endDate, classId } = req.query;
 
-    if (!studentId) {
+    if (!id) {
       sendBadRequest(res, "Student ID is required");
       return;
     }
@@ -249,44 +235,7 @@ export class StudentController {
     if (endDate) query.endDate = endDate as string;
     if (classId) query.classId = classId as string;
 
-    const attendance = await StudentService.getAttendance(studentId, query);
+    const attendance = await StudentService.getAttendance(id, query);
     sendSuccess(res, attendance, "Student attendance retrieved successfully");
-  });
-
-  // Get students by class (accessible by teachers and admins)
-  static getByClass = asyncHandler(async (req: Request, res: Response) => {
-    const { classId } = req.params;
-
-    if (!classId) {
-      sendBadRequest(res, "Class ID is required");
-      return;
-    }
-
-    const students = await StudentService.getByClass(classId);
-    sendSuccess(res, students, "Students retrieved successfully");
-  });
-
-  // Get students by gender (accessible by teachers and admins)
-  static getByGender = asyncHandler(async (req: Request, res: Response) => {
-    const { gender } = req.params;
-
-    if (!gender) {
-      sendBadRequest(res, "Gender parameter is required");
-      return;
-    }
-
-    if (!["male", "female", "other"].includes(gender)) {
-      sendBadRequest(res, "Gender must be male, female, or other");
-      return;
-    }
-
-    const students = await StudentService.getByGender(gender);
-    sendSuccess(res, students, "Students retrieved successfully");
-  });
-
-  // Get active students only (accessible by all authenticated users)
-  static getActive = asyncHandler(async (req: Request, res: Response) => {
-    const students = await StudentService.getActive();
-    sendSuccess(res, students, "Active students retrieved successfully");
-  });
+  };
 }

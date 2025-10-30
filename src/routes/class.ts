@@ -4,52 +4,35 @@ import {
   authenticate,
   adminOnly,
   teacherOrAdmin,
-  teacherAssignedToClassOrAdmin,
+  teacherFromSameSchoolOrAdmin,
+  adminOrPrincipal,
 } from "@/middleware/auth";
-import { classRateLimiter } from "@/middleware/security";
 import { ClassController } from "@/controllers/classController";
 
 const router: Router = Router();
-
-// Apply rate limiting to all class routes
-// router.use(classRateLimiter);
-
-// Public routes (no authentication required)
-router.get("/active", ClassController.getActive);
 
 // Protected routes (authentication required)
 router.use(authenticate);
 
 // Routes accessible by all authenticated users (teachers, admins)
-router.get("/", teacherOrAdmin, ClassController.getAll);
-router.get("/grade/:grade", teacherOrAdmin, ClassController.getByGrade);
-router.get(
-  "/academic-year/:academicYear",
-  teacherOrAdmin,
-  ClassController.getByAcademicYear
-);
+router.get("/", ClassController.getAll);
 
-// Routes accessible by teachers assigned to the class and admins
-router.get("/:id", teacherAssignedToClassOrAdmin(), ClassController.getById);
+// IMPORTANT: Define static routes BEFORE parameterized routes to avoid matching ":id" with "students"/"teachers"
 router.get(
-  "/name/:name/grade/:grade",
-  teacherOrAdmin,
-  ClassController.getByNameAndGrade
-);
-router.get(
-  "/:classId/students",
-  teacherAssignedToClassOrAdmin(),
+  "/students",
   ClassController.getStudents
 );
 router.get(
-  "/:classId/teachers",
-  teacherAssignedToClassOrAdmin(),
-  ClassController.getWithTeachers
+  "/teachers",
+
+  ClassController.getTeachers
 );
+// Routes accessible by teachers from same school and admins
+router.get("/:id", ClassController.getById);
 
 // Routes accessible by admins only
-router.post("/", adminOnly, ClassController.create);
-router.put("/:id", adminOnly, ClassController.update);
-router.delete("/:id", adminOnly, ClassController.delete);
+router.post("/", adminOrPrincipal, ClassController.create);
+router.put("/:id", adminOrPrincipal, ClassController.update);
+router.delete("/:id", adminOrPrincipal, ClassController.delete);
 
 export default router;

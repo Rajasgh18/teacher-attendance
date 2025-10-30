@@ -1,6 +1,11 @@
 import { Router } from "express";
 
-import { adminOnly, selfOrAdmin, authenticate } from "@/middleware/auth";
+import {
+  adminOnly,
+  selfOrAdmin,
+  authenticate,
+  adminOrPrincipal,
+} from "@/middleware/auth";
 import { userRateLimiter } from "@/middleware/security";
 import { UserController } from "@/controllers/userController";
 
@@ -42,20 +47,20 @@ router.put("/:id/change-password", selfOrAdmin, UserController.changePassword);
 router.post("/live-location", UserController.createLiveLocation);
 
 // Routes accessible by admins only
-router.get("/", adminOnly, UserController.getAll);
-router.get("/all", adminOnly, UserController.getAllUsers);
-router.get("/stats", adminOnly, UserController.getUserStats);
-router.get("/search", adminOnly, UserController.searchUsers);
-router.get("/role/:role", adminOnly, UserController.getByRole);
-router.get("/email/:email", adminOnly, UserController.getByEmail);
+router.get("/", adminOrPrincipal, UserController.getAll);
+router.get("/all", adminOrPrincipal, UserController.getAllUsers);
+router.get("/stats", adminOrPrincipal, UserController.getUserStats);
+router.get("/search", adminOrPrincipal, UserController.searchUsers);
+router.get("/role/:role", adminOrPrincipal, UserController.getByRole);
+router.get("/email/:email", adminOrPrincipal, UserController.getByEmail);
 router.get("/:id", selfOrAdmin, UserController.getById);
 
 // Routes accessible by admins only
-router.post("/", adminOnly, UserController.create);
+router.post("/", adminOrPrincipal, UserController.create);
 
 router.put("/:id", selfOrAdmin, UserController.update);
 router.put("/:id/password", selfOrAdmin, UserController.updatePassword);
 
-router.delete("/:id", adminOnly, UserController.delete);
+router.delete("/:id", adminOrPrincipal, UserController.delete);
 
 export default router;

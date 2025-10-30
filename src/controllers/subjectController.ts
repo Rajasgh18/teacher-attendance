@@ -5,7 +5,7 @@ import { Request, Response } from "express";
 export class SubjectController {
   static getAllSubjects = async (req: Request, res: Response) => {
     const result = await SubjectService.getAllSubjects();
-    sendSuccess(res, result, "Subjects retrieved successfully");
+    sendSuccess(res, { data: result }, "Subjects retrieved successfully");
   };
 
   static createSubject = async (req: Request, res: Response) => {
@@ -46,19 +46,27 @@ export class SubjectController {
   static createSubjectMarksBulk = async (req: Request, res: Response) => {
     try {
       const { marksData } = req.body;
-      
+
       if (!marksData || !Array.isArray(marksData) || marksData.length === 0) {
         sendBadRequest(res, "Marks data array is required");
         return;
       }
 
       const result = await SubjectService.createSubjectMarksBulk(marksData);
-      
+
       if (result.summary.errors > 0) {
         // Send success with warnings if there are some errors
-        sendSuccess(res, result, `Processed ${result.totalProcessed} marks with ${result.summary.errors} errors`);
+        sendSuccess(
+          res,
+          result,
+          `Processed ${result.totalProcessed} marks with ${result.summary.errors} errors`
+        );
       } else {
-        sendCreated(res, result, `Successfully processed ${result.totalProcessed} marks`);
+        sendCreated(
+          res,
+          result,
+          `Successfully processed ${result.totalProcessed} marks`
+        );
       }
     } catch (error) {
       console.error("Error in bulk marks creation:", error);

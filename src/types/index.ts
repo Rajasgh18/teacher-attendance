@@ -227,5 +227,6 @@ export interface RegisterData {
 export interface TokenPayload {
   userId: string;
   employeeId: string;
+  schoolId: string;
   role: string;
 }

@@ -7,24 +7,15 @@ import { NotFoundError, ConflictError } from "@/types";
 
 export class ClassService {
   // Get all classes with pagination and search
-  static async getAll(
+  static async getBy(
     query: {
       page?: number;
       limit?: number;
       search?: string;
-      grade?: string;
-      academicYear?: string;
-      isActive?: boolean;
+      schoolId?: string;
     } = {}
   ) {
-    const {
-      page = 1,
-      limit = 10,
-      search,
-      grade,
-      academicYear,
-      isActive,
-    } = query;
+    const { page = 1, limit = 10, search, schoolId } = query;
     const offset = (page - 1) * limit;
 
     let whereConditions = [];
@@ -33,16 +24,8 @@ export class ClassService {
       whereConditions.push(like(classes.name, `%${search}%`));
     }
 
-    if (grade) {
-      whereConditions.push(eq(classes.grade, grade));
-    }
-
-    if (academicYear) {
-      whereConditions.push(eq(classes.academicYear, academicYear));
-    }
-
-    if (isActive !== undefined) {
-      whereConditions.push(eq(classes.isActive, isActive));
+    if (schoolId) {
+      whereConditions.push(eq(classes.schoolId, schoolId));
     }
 
     const whereClause =
@@ -80,21 +63,6 @@ export class ClassService {
       .select()
       .from(classes)
       .where(eq(classes.id, id))
-      .limit(1);
-
-    if (!result.length) {
-      throw new NotFoundError("Class not found");
-    }
-
-    return result[0]!;
-  }
-
-  // Get class by name and grade
-  static async getByNameAndGrade(name: string, grade: string) {
-    const result = await db
-      .select()
-      .from(classes)
-      .where(and(eq(classes.name, name), eq(classes.grade, grade)))
       .limit(1);
 
     if (!result.length) {
@@ -187,7 +155,21 @@ export class ClassService {
   }
 
   // Get students in a class
-  static async getStudents(classId: string) {
+  static async getStudents(query: { classId?: string; schoolId?: string }) {
+    const { classId, schoolId } = query;
+    let whereConditions = [];
+
+    if (classId) {
+      whereConditions.push(eq(students.classId, classId));
+    }
+
+    if (schoolId) {
+      whereConditions.push(eq(students.schoolId, schoolId));
+    }
+
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
     const result = await db
       .select({
         id: students.id,
@@ -205,14 +187,28 @@ export class ClassService {
         updatedAt: students.updatedAt,
       })
       .from(students)
-      .where(eq(students.classId, classId))
+      .where(whereClause)
       .orderBy(asc(students.studentId));
 
     return result;
   }
 
   // Get class with teacher assignments
-  static async getWithTeachers(classId: string) {
+  static async getTeachers(query: { classId?: string; schoolId?: string }) {
+    const { classId, schoolId } = query;
+    let whereConditions = [];
+
+    if (classId) {
+      whereConditions.push(eq(students.classId, classId));
+    }
+
+    if (schoolId) {
+      whereConditions.push(eq(students.schoolId, schoolId));
+    }
+
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
     const result = await db
       .select({
         id: teacherAssignments.id,
@@ -234,37 +230,8 @@ export class ClassService {
       })
       .from(teacherAssignments)
       .leftJoin(users, eq(teacherAssignments.teacherId, users.id))
-      .where(eq(teacherAssignments.classId, classId));
+      .where(whereClause);
 
     return result;
-  }
-
-  // Get classes by grade
-  static async getByGrade(grade: string) {
-    return db
-      .select()
-      .from(classes)
-      .where(and(eq(classes.grade, grade), eq(classes.isActive, true)))
-      .orderBy(asc(classes.name));
-  }
-
-  // Get classes by academic year
-  static async getByAcademicYear(academicYear: string) {
-    return db
-      .select()
-      .from(classes)
-      .where(
-        and(eq(classes.academicYear, academicYear), eq(classes.isActive, true))
-      )
-      .orderBy(asc(classes.name));
-  }
-
-  // Get active classes only
-  static async getActive() {
-    return db
-      .select()
-      .from(classes)
-      .where(eq(classes.isActive, true))
-      .orderBy(asc(classes.name));
   }
 }

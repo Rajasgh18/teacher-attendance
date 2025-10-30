@@ -13,11 +13,10 @@ export class StudentService {
       limit?: number;
       search?: string;
       classId?: string;
-      gender?: string;
-      isActive?: boolean;
+      schoolId?: string;
     } = {}
   ) {
-    const { page = 1, limit = 10, search, classId, gender, isActive } = query;
+    const { page = 1, limit = 10, search, classId, schoolId } = query;
     const offset = (page - 1) * limit;
 
     let whereConditions = [];
@@ -35,14 +34,8 @@ export class StudentService {
       whereConditions.push(eq(students.classId, classId));
     }
 
-    if (gender) {
-      whereConditions.push(
-        eq(students.gender, gender as "male" | "female" | "other")
-      );
-    }
-
-    if (isActive !== undefined) {
-      whereConditions.push(eq(students.isActive, isActive));
+    if (schoolId !== undefined) {
+      whereConditions.push(eq(students.schoolId, schoolId));
     }
 
     const whereClause =
@@ -124,43 +117,6 @@ export class StudentService {
       .from(students)
       .leftJoin(classes, eq(students.classId, classes.id))
       .where(eq(students.id, id))
-      .limit(1);
-
-    if (!result.length) {
-      throw new NotFoundError("Student not found");
-    }
-
-    return result[0]!;
-  }
-
-  // Get student by student ID
-  static async getByStudentId(studentId: string) {
-    const result = await db
-      .select({
-        id: students.id,
-        classId: students.classId,
-        studentId: students.studentId,
-        firstName: students.firstName,
-        lastName: students.lastName,
-        email: students.email,
-        phone: students.phone,
-        address: students.address,
-        dateOfBirth: students.dateOfBirth,
-        gender: students.gender,
-        isActive: students.isActive,
-        createdAt: students.createdAt,
-        updatedAt: students.updatedAt,
-        class: {
-          id: classes.id,
-          name: classes.name,
-          grade: classes.grade,
-          section: classes.section,
-          academicYear: classes.academicYear,
-        },
-      })
-      .from(students)
-      .leftJoin(classes, eq(students.classId, classes.id))
-      .where(eq(students.studentId, studentId))
       .limit(1);
 
     if (!result.length) {
@@ -321,95 +277,5 @@ export class StudentService {
       .orderBy(asc(studentAttendance.date));
 
     return result;
-  }
-
-  // Get students by class
-  static async getByClass(classId: string) {
-    return db
-      .select({
-        id: students.id,
-        classId: students.classId,
-        studentId: students.studentId,
-        firstName: students.firstName,
-        lastName: students.lastName,
-        email: students.email,
-        phone: students.phone,
-        address: students.address,
-        dateOfBirth: students.dateOfBirth,
-        gender: students.gender,
-        isActive: students.isActive,
-        createdAt: students.createdAt,
-        updatedAt: students.updatedAt,
-      })
-      .from(students)
-      .where(and(eq(students.classId, classId), eq(students.isActive, true)))
-      .orderBy(asc(students.studentId));
-  }
-
-  // Get students by gender
-  static async getByGender(gender: string) {
-    return db
-      .select({
-        id: students.id,
-        classId: students.classId,
-        studentId: students.studentId,
-        firstName: students.firstName,
-        lastName: students.lastName,
-        email: students.email,
-        phone: students.phone,
-        address: students.address,
-        dateOfBirth: students.dateOfBirth,
-        gender: students.gender,
-        isActive: students.isActive,
-        createdAt: students.createdAt,
-        updatedAt: students.updatedAt,
-        class: {
-          id: classes.id,
-          name: classes.name,
-          grade: classes.grade,
-          section: classes.section,
-          academicYear: classes.academicYear,
-        },
-      })
-      .from(students)
-      .leftJoin(classes, eq(students.classId, classes.id))
-      .where(
-        and(
-          eq(students.gender, gender as "male" | "female" | "other"),
-          eq(students.isActive, true)
-        )
-      )
-      .orderBy(asc(students.studentId));
-  }
-
-  // Get active students only
-  static async getActive() {
-    return db
-      .select({
-        id: students.id,
-        classId: students.classId,
-        studentId: students.studentId,
-        firstName: students.firstName,
-        lastName: students.lastName,
-        email: students.email,
-        phone: students.phone,
-        address: students.address,
-        dateOfBirth: students.dateOfBirth,
-        gender: students.gender,
-        isActive: students.isActive,
-        createdAt: students.createdAt,
-        updatedAt: students.updatedAt,
-        class: {
-          id: classes.id,
-          name: classes.name,
-          grade: classes.grade,
-          section: classes.section,
-          academicYear: classes.academicYear,
-        },
-      })
-      .from(students)
-      .leftJoin(classes, eq(students.classId, classes.id))
-      .where(eq(students.isActive, true))
-      .orderBy(asc(students.studentId));
   }
 }
