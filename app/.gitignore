@@ -1,0 +1,84 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+.env
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# iOS
+ios/build/
+ios/Pods/
+ios/DerivedData/
+ios/*.xcworkspace
+ios/xcuserdata/
+ios/*.pbxuser
+ios/*.mode1v3
+ios/*.mode2v3
+ios/*.perspectivev3
+ios/*.xcuserstate
+ios/.xcode.env
+ios/.swiftpm/
+ios/.package.resolved
+ios/.DS_Store
+
+# local env files
+.env*.local
+.env
+
+# typescript
+*.tsbuildinfo
+
+# Android
+android/.gradle/
+android/app/build/
+android/app/.cxx/
+android/build/
+android/.idea/
+android/local.properties
+android/.cxx/
+android/.DS_Store
+android/gradle.properties
+android/gradlew
+android/gradlew.bat
+android/gradle/
+
+# IntelliJ & Android Studio
+*.iml
+*.hprof
+*.log
+*.tmp
+*.bak
+*.swp
+*~.nib
+
+# Keystore (⚠️ Optional — only if it's not meant to be public)
+android/app/*.keystore
+android/app/*.jks
+
+# Crashlytics / Fabric
+android/app/crashlytics-build.properties
+
+# NDK
+android/ndk/
+
+# Others
+**/captures/
+
+# build
+build/

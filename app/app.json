@@ -1,0 +1,8 @@
+{
+  "name": "teacher_attendance",
+  "displayName": "Teacher Attendance",
+  "version": "1.0.0",
+  "bundleId": "com.teacherattendance.app",
+  "description": "Professional attendance management system for teachers",
+  "author": "CodingXWizard"
+}
