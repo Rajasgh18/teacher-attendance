@@ -331,8 +331,7 @@ export const endpoints = {
     active: "/student/active",
     get: (id: string) => `/student/${id}`,
     byStudentId: (studentId: string) => `/student/student/${studentId}`,
-    byClass: (classId: string) => `/student/class/${classId}`,
-    byGender: (gender: string) => `/student/gender/${gender}`,
+    byClass: `/class/students`,
     attendance: (studentId: string) => `/student/${studentId}/attendance`,
     create: "/student",
     update: (id: string) => `/student/${id}`,
@@ -392,6 +391,7 @@ export const usersApi = {
     search?: string;
     role?: string;
     department?: string;
+    schoolId?: string;
     isActive?: boolean;
   }) =>
     api.getPaginated<User>(endpoints.users.list, params?.page, params?.limit, {
@@ -529,6 +529,7 @@ export const teachersApi = {
     limit?: number;
     search?: string;
     department?: string;
+    schoolId?: string;
     isActive?: boolean;
   }) =>
     api.getPaginated<TeacherWithUser>(
@@ -574,9 +575,7 @@ export const classesApi = {
     page?: number;
     limit?: number;
     search?: string;
-    grade?: string;
-    academicYear?: string;
-    isActive?: boolean;
+    schoolId?: string;
   }) =>
     api.getPaginated<Class>(
       endpoints.classes.list,
@@ -585,18 +584,7 @@ export const classesApi = {
       { params },
     ),
 
-  active: () => api.get<Class[]>(endpoints.classes.active),
-
   get: (id: string) => api.get<Class>(endpoints.classes.get(id)),
-
-  byGrade: (grade: string) =>
-    api.get<Class[]>(endpoints.classes.byGrade(grade)),
-
-  byAcademicYear: (academicYear: string) =>
-    api.get<Class[]>(endpoints.classes.byAcademicYear(academicYear)),
-
-  byNameAndGrade: (name: string, grade: string) =>
-    api.get<Class>(endpoints.classes.byNameAndGrade(name, grade)),
 
   students: (classId: string) =>
     api.get<Student[]>(endpoints.classes.students(classId)),
@@ -622,8 +610,7 @@ export const studentsApi = {
     limit?: number;
     search?: string;
     classId?: string;
-    gender?: string;
-    isActive?: boolean;
+    schoolId?: string;
   }) =>
     api.getPaginated<StudentWithClass>(
       endpoints.students.list,
@@ -639,11 +626,8 @@ export const studentsApi = {
   byStudentId: (studentId: string) =>
     api.get<StudentWithClass>(endpoints.students.byStudentId(studentId)),
 
-  byClass: (classId: string) =>
-    api.get<Student[]>(endpoints.students.byClass(classId)),
-
-  byGender: (gender: string) =>
-    api.get<StudentWithClass[]>(endpoints.students.byGender(gender)),
+  byClassOrSchool: (params?: { classId?: string; schoolId?: string }) =>
+    api.get<Student[]>(endpoints.students.byClass, { params }),
 
   attendance: (
     studentId: string,

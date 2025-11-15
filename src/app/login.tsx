@@ -8,7 +8,7 @@ import {
   ScrollView,
   StyleSheet,
 } from "react-native";
-import { School, Mail, Lock } from "lucide-react-native";
+import { School, User, Lock } from "lucide-react-native";
 import { useNavigation } from "@/navigation";
 
 import { AuthService } from "@/services";
@@ -22,12 +22,12 @@ const LoginScreen = () => {
   const { setUser } = useUserStore();
   const navigation = useNavigation();
   const { showAlert } = useAlert();
-  const [email, setEmail] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!employeeId || !password) {
       showAlert({
         title: "Error",
         message: "Please fill in all fields",
@@ -38,7 +38,7 @@ const LoginScreen = () => {
 
     setIsLoading(true);
     try {
-      const response = await AuthService.login({ email, password });
+      const response = await AuthService.login({ employeeId, password });
       setUser(response.user);
       // Navigate to data sync screen instead of directly to dashboard
       navigation.navigate("DataSync", { user: response.user });
@@ -105,11 +105,11 @@ const LoginScreen = () => {
             {/* Login Form */}
             <View style={styles.form}>
               <LabelInput
-                label="Email"
-                value={email}
-                onChangeText={setEmail}
-                icon={Mail}
-                placeholder="Enter your email"
+                label="Employee ID"
+                value={employeeId}
+                onChangeText={setEmployeeId}
+                icon={User}
+                placeholder="Enter your employee ID"
               />
               <LabelInput
                 label="Password"

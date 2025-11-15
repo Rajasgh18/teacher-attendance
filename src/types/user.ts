@@ -1,16 +1,24 @@
 export enum UserRole {
   TEACHER = "teacher",
+  PRINCIPAL = "principal",
   ADMIN = "admin",
+}
+
+export interface School {
+  id: string;
+  name: string;
 }
 
 export interface User {
   id: string;
-  email: string;
+  email?: string;
   firstName: string;
-  lastName: string;
+  lastName?: string;
   role: UserRole;
   // Teacher-specific fields (nullable for non-teachers)
-  employeeId?: string;
+  employeeId: string;
+  schoolId: string;
+  school?: School;
   department?: string;
   phone?: string;
   address?: string;

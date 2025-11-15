@@ -98,6 +98,7 @@ export class SubjectsService {
                 updatedAt: subject.updatedAt,
               },
               class: {
+                schoolId: classData.schoolId,
                 classId: classData.classId,
                 id: classData.classId,
                 name: classData.name,

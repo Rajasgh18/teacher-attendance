@@ -10,6 +10,8 @@ export default class User extends Model {
   @field("first_name") firstName!: string;
   @field("last_name") lastName!: string;
   @field("employee_id") employeeId!: string | null;
+  @field("school_id") schoolId!: string | null;
+  @field("school_name") schoolName!: string | null;
   @field("department") department!: string | null;
   @field("phone") phone!: string | null;
   @field("address") address!: string | null;

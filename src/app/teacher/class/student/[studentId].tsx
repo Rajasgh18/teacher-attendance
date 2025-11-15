@@ -152,7 +152,7 @@ const StudentScreen = () => {
                     <View
                       style={[
                         styles.classBadge,
-                        { backgroundColor: colors.primaryContainer },
+                        { backgroundColor: colors.surfaceElevated },
                       ]}
                     >
                       <School size={16} color={colors.primary} />
@@ -193,10 +193,10 @@ const StudentScreen = () => {
                   <View
                     style={[
                       styles.infoIcon,
-                      { backgroundColor: colors.primaryContainer },
+                      { backgroundColor: colors.primary },
                     ]}
                   >
-                    <Mail size={20} color={colors.primary} />
+                    <Mail size={20} color={colors.text} />
                   </View>
                   <View style={styles.infoContent}>
                     <Text
@@ -251,10 +251,10 @@ const StudentScreen = () => {
                   <View
                     style={[
                       styles.infoIcon,
-                      { backgroundColor: colors.secondaryContainer },
+                      { backgroundColor: colors.primary },
                     ]}
                   >
-                    <MapPin size={20} color={colors.secondary} />
+                    <MapPin size={20} color={colors.text} />
                   </View>
                   <View style={styles.infoContent}>
                     <Text
@@ -307,12 +307,9 @@ const StudentScreen = () => {
                   ]}
                 >
                   <View
-                    style={[
-                      styles.infoIcon,
-                      { backgroundColor: colors.secondaryContainer },
-                    ]}
+                    style={[styles.infoIcon, { backgroundColor: colors.info }]}
                   >
-                    <User size={20} color={colors.secondary} />
+                    <User size={20} color={colors.text} />
                   </View>
                   <View style={styles.infoContent}>
                     <Text
@@ -353,7 +350,7 @@ const StudentScreen = () => {
                     style={[
                       styles.statCard,
                       {
-                        backgroundColor: colors.successContainer,
+                        backgroundColor: colors.surface,
                         borderColor: colors.success,
                       },
                     ]}
@@ -375,7 +372,7 @@ const StudentScreen = () => {
                     style={[
                       styles.statCardAbsent,
                       {
-                        backgroundColor: colors.errorContainer,
+                        backgroundColor: colors.surface,
                         borderColor: colors.error,
                       },
                     ]}
@@ -404,7 +401,7 @@ const StudentScreen = () => {
                     style={[
                       styles.statCardTotal,
                       {
-                        backgroundColor: colors.primaryContainer,
+                        backgroundColor: colors.surface,
                         borderColor: colors.primary,
                       },
                     ]}

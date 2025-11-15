@@ -3,6 +3,7 @@ import { Student } from "./student";
 export interface Class {
   id: string;
   classId: string;
+  schoolId: string;
   name: string;
   grade: string;
   section: string;

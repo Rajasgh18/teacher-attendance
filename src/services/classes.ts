@@ -6,12 +6,13 @@ class ClassesService {
   /**
    * Get teacher's classes from local database
    */
-  static async getTeacherClasses(teacherId: string): Promise<Class[]> {
+  static async getClasses(): Promise<Class[]> {
     try {
-      const classes = await DatabaseService.getTeacherClasses(teacherId);
+      const classes = await DatabaseService.getTeacherClasses();
       return classes.map(cls => ({
         id: cls.id,
         classId: cls.classId,
+        schoolId: cls.schoolId,
         name: cls.name,
         grade: cls.grade,
         section: cls.section,
@@ -38,6 +39,7 @@ class ClassesService {
       return {
         id: cls.id,
         classId: cls.classId,
+        schoolId: cls.schoolId,
         name: cls.name,
         grade: cls.grade,
         section: cls.section,
@@ -64,7 +66,7 @@ class ClassesService {
       // For now, return all classes for the teacher
       // This can be enhanced with proper search functionality
       const classes = teacherId
-        ? await DatabaseService.getTeacherClasses(teacherId)
+        ? await DatabaseService.getTeacherClasses()
         : await DatabaseService.getAllClasses();
 
       return classes
@@ -72,6 +74,7 @@ class ClassesService {
         .map(cls => ({
           id: cls.id,
           classId: cls.classId,
+          schoolId: cls.schoolId,
           name: cls.name,
           grade: cls.grade,
           section: cls.section,

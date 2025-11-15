@@ -11,6 +11,7 @@ import {
 } from "@/db/models";
 import database from "@/db";
 import {
+  User as UserType,
   Class as ClassType,
   Marks as MarksType,
   Student as StudentType,
@@ -65,6 +66,8 @@ export class DatabaseService {
     firstName: string;
     lastName: string;
     employeeId?: string;
+    schoolId?: string;
+    schoolName?: string;
     department?: string;
     phone?: string;
     address?: string;
@@ -79,6 +82,8 @@ export class DatabaseService {
         user.firstName = userData.firstName;
         user.lastName = userData.lastName;
         user.employeeId = userData.employeeId || null;
+        user.schoolId = userData.schoolId || null;
+        user.schoolName = userData.schoolName || null;
         user.department = userData.department || null;
         user.phone = userData.phone || null;
         user.address = userData.address || null;
@@ -111,9 +116,86 @@ export class DatabaseService {
         await user.update(updatedUser => {
           if (userData.email) updatedUser.email = userData.email;
           if (userData.role) updatedUser.role = userData.role;
+          if (userData.schoolId) updatedUser.schoolId = userData.schoolId;
+          if (userData.schoolName) updatedUser.schoolName = userData.schoolName;
           if (userData.isActive !== undefined)
             updatedUser.isActive = userData.isActive;
         });
+      });
+    }
+  }
+
+  // Store user data from API response
+  static async storeUserFromApi(userData: any): Promise<void> {
+    try {
+      const existingUser = await database.get<User>("users").find(userData.id);
+      if (existingUser) {
+        await database.write(async () => {
+          await existingUser.update(updatedUser => {
+            updatedUser.email = userData.email || updatedUser.email;
+            updatedUser.firstName = userData.firstName || updatedUser.firstName;
+            updatedUser.lastName = userData.lastName || updatedUser.lastName;
+            updatedUser.role = userData.role || updatedUser.role;
+            updatedUser.employeeId =
+              userData.employeeId || updatedUser.employeeId;
+            updatedUser.schoolId = userData.schoolId || updatedUser.schoolId;
+            updatedUser.schoolName =
+              userData.school?.name || updatedUser.schoolName;
+            updatedUser.department =
+              userData.department || updatedUser.department;
+            updatedUser.phone = userData.phone || updatedUser.phone;
+            updatedUser.address = userData.address || updatedUser.address;
+            updatedUser.hireDate = userData.hireDate || updatedUser.hireDate;
+            updatedUser.isActive =
+              userData.isActive !== undefined
+                ? userData.isActive
+                : updatedUser.isActive;
+            updatedUser.updatedAt = Date.now();
+          });
+        });
+      } else {
+        await database.write(async () => {
+          await database.get<User>("users").create(user => {
+            user.email = userData.email || "";
+            user.passwordHash = ""; // Not stored from API
+            user.firstName = userData.firstName || "";
+            user.lastName = userData.lastName || "";
+            user.role = userData.role || "";
+            user.employeeId = userData.employeeId || null;
+            user.schoolId = userData.schoolId || null;
+            user.schoolName = userData.school?.name || null;
+            user.department = userData.department || null;
+            user.phone = userData.phone || null;
+            user.address = userData.address || null;
+            user.hireDate = userData.hireDate || null;
+            user.isActive =
+              userData.isActive !== undefined ? userData.isActive : true;
+            user.createdAt = userData.createdAt || Date.now();
+            user.updatedAt = userData.updatedAt || Date.now();
+          });
+        });
+      }
+    } catch (error) {
+      console.error("Error storing user from API:", error);
+    }
+  }
+
+  static async syncUsers(usersData: UserType[]): Promise<void> {
+    for (const user of usersData) {
+      await this.createUser({
+        email: user.email || "",
+        passwordHash: "",
+        role: user.role,
+        firstName: user.firstName,
+        lastName: user.lastName || "",
+        employeeId: user.employeeId,
+        schoolId: user.schoolId,
+        schoolName: user.school?.name,
+        department: user.department,
+        phone: user.phone,
+        address: user.address,
+        hireDate: user.hireDate,
+        isActive: user.isActive,
       });
     }
   }

@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { Database, AlertTriangle } from "lucide-react-native";
 import { useRoute, RouteProp } from "@react-navigation/native";
 
-import type { User } from "@/types";
+import { User, UserRole } from "@/types";
 import { useUserStore } from "@/stores/userStore";
 import DataSyncService from "@/services/dataSyncService";
 import { useAlert } from "@/contexts/AlertContext";
@@ -32,8 +32,6 @@ const DataSyncScreen = () => {
   const route = useRoute<DataSyncScreenRouteProp>();
 
   const [_isLoading, setIsLoading] = useState(true);
-  const [syncProgress, setSyncProgress] = useState(0);
-  const [syncMessage, setSyncMessage] = useState("");
   const [showConflictDialog, setShowConflictDialog] = useState(false);
   const [existingUserName, setExistingUserName] = useState("");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -45,7 +43,6 @@ const DataSyncScreen = () => {
   const initializeDataSync = async () => {
     try {
       setIsLoading(true);
-      setSyncMessage("Checking existing data...");
 
       let user: User | null = route.params?.user;
       if (!user) {
@@ -71,9 +68,7 @@ const DataSyncScreen = () => {
       }
 
       // No conflict, proceed with data loading
-      await loadTeacherData();
-      await loadAttendanceData(user.id);
-      await loadSubjectMarksData(user.id);
+      await loadData(user.id, user.role, user.schoolId);
       navigateToDashboard();
     } catch (error) {
       console.error("Error in data sync initialization:", error);
@@ -95,27 +90,17 @@ const DataSyncScreen = () => {
     }
   };
 
-  const loadTeacherData = async () => {
+  const loadData = async (userId: string, role: UserRole, schoolId: string) => {
     try {
-      setSyncMessage("Removing existing data...");
-      setSyncProgress(0);
-      try {
-        // Clear any existing data first
-        await DataSyncService.clearExistingData();
-      } catch (error) {
-        console.error("Error clearing existing data:", error);
-      }
+      // Clear any existing data first
+      await DataSyncService.clearExistingData();
 
-      setSyncMessage("Loading teacher data...");
-      setSyncProgress(20);
-      try {
-        // Load new teacher data
-        await DataSyncService.loadTeacherData();
-      } catch (error) {
-        console.error("Error loading teacher data:", error);
+      // Load new teacher data
+      if (role === UserRole.PRINCIPAL) {
+        await DataSyncService.loadPrincipalData(schoolId);
+      } else {
+        await DataSyncService.loadTeacherData(userId);
       }
-      setSyncMessage("Loaded Teacher Data successfully...");
-      setSyncProgress(40);
     } catch (error) {
       console.error("Error loading teacher data:", error);
       showAlert({
@@ -126,7 +111,7 @@ const DataSyncScreen = () => {
         buttons: [
           {
             text: "Retry",
-            onPress: () => loadTeacherData(),
+            onPress: () => loadData(userId, role, schoolId),
           },
           {
             text: "Skip",
@@ -134,42 +119,6 @@ const DataSyncScreen = () => {
           },
         ],
       });
-    }
-  };
-
-  const loadAttendanceData = async (teacherId: string) => {
-    try {
-      setSyncMessage("Loading attendance data...");
-      setSyncProgress(50);
-      try {
-        await DataSyncService.loadAttendanceData(teacherId);
-      } catch (error) {
-        console.error("Error loading attendance data:", error);
-      }
-      setSyncMessage("Loaded Attendance Data successfully...");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSyncMessage("Finalizing...");
-      setSyncProgress(70);
-    } catch (error) {
-      console.error("Error loading attendance data:", error);
-    }
-  };
-
-  const loadSubjectMarksData = async (teacherId: string) => {
-    try {
-      setSyncMessage("Loading subject and marks data...");
-      setSyncProgress(80);
-      try {
-        await DataSyncService.loadSubjectMarksData(teacherId);
-      } catch (error) {
-        console.error("Error loading subject marks data:", error);
-      }
-      setSyncMessage("Loaded Subject Marks Data successfully...");
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      setSyncMessage("Finalizing...");
-      setSyncProgress(90);
-    } catch (error) {
-      console.error("Error loading subject marks data:", error);
     }
   };
 
@@ -181,11 +130,11 @@ const DataSyncScreen = () => {
 
     try {
       if (shouldClear) {
-        setSyncMessage("Clearing existing data...");
         await DataSyncService.clearExistingData();
       }
 
-      await loadTeacherData();
+      await loadData(currentUser.id, currentUser.role, currentUser.schoolId);
+      navigateToDashboard();
     } catch (error) {
       console.error("Error resolving data conflict:", error);
       showAlert({
@@ -212,7 +161,14 @@ const DataSyncScreen = () => {
     }
     navigation.reset({
       index: 0,
-      routes: [{ name: "Dashboard" }],
+      routes: [
+        {
+          name:
+            currentUser && currentUser.role === UserRole.PRINCIPAL
+              ? "Principal"
+              : "Teacher",
+        },
+      ],
     });
   };
 
@@ -277,28 +233,6 @@ const DataSyncScreen = () => {
         <Text style={[styles.loadingTitle, { color: colors.text }]}>
           Setting Up Your Data
         </Text>
-        <Text style={[styles.loadingMessage, { color: colors.textSecondary }]}>
-          {syncMessage}
-        </Text>
-
-        <View style={styles.progressContainer}>
-          <View
-            style={[styles.progressBar, { backgroundColor: colors.border }]}
-          >
-            <View
-              style={[
-                styles.progressFill,
-                {
-                  width: `${syncProgress}%`,
-                  backgroundColor: colors.primary,
-                },
-              ]}
-            />
-          </View>
-          <Text style={[styles.progressText, { color: colors.textSecondary }]}>
-            {Math.round(syncProgress)}%
-          </Text>
-        </View>
 
         <ActivityIndicator
           size="large"
@@ -335,30 +269,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 12,
-  },
-  loadingMessage: {
-    fontSize: 16,
-    textAlign: "center",
-    marginBottom: 32,
-  },
-  progressContainer: {
-    width: "100%",
-    marginBottom: 24,
-  },
-  progressBar: {
-    width: "100%",
-    height: 8,
-    borderRadius: 4,
-    overflow: "hidden",
-    marginBottom: 8,
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
-  progressText: {
-    fontSize: 14,
-    textAlign: "center",
   },
   spinner: {
     marginTop: 16,

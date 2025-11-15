@@ -24,6 +24,14 @@ class UsersService {
         lastName: user.lastName,
         role: user.role as any, // Convert to UserRole enum
         employeeId: user.employeeId || "",
+        schoolId: user.schoolId || "",
+        school:
+          user.schoolId && user.schoolName
+            ? {
+                id: user.schoolId,
+                name: user.schoolName,
+              }
+            : undefined,
         department: user.department || "",
         phone: user.phone || "",
         address: user.address || "",
@@ -70,6 +78,14 @@ class UsersService {
         lastName: user.lastName,
         role: user.role as any, // Convert to UserRole enum
         employeeId: user.employeeId || "",
+        schoolId: user.schoolId || "",
+        school:
+          user.schoolId && user.schoolName
+            ? {
+                id: user.schoolId,
+                name: user.schoolName,
+              }
+            : undefined,
         department: user.department || "",
         phone: user.phone || "",
         address: user.address || "",

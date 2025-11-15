@@ -1,17 +1,20 @@
 import React from "react";
-import "react-native-screens";
+import { enableScreens } from "react-native-screens";
 import { StyleSheet } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
-import AppRouter from "@/app/_router";
 import Alert from "@/components/Alert";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { navigationRef } from "@/navigation/NavigationService";
 import { DatabaseProvider } from "@/components/DatabaseProvider";
 import { AlertProvider, useAlert } from "@/contexts/AlertContext";
 import { autoSyncService } from "@/services/autoSyncService";
+import AppRouter from "./app/app-router";
+import Tabs from "./app/principal/tabs";
+
+enableScreens();
 
 const AppContent = () => {
   const { hideAlert, alertState } = useAlert();

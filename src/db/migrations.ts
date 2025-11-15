@@ -17,6 +17,8 @@ export default schemaMigrations({
             { name: "first_name", type: "string" },
             { name: "last_name", type: "string" },
             { name: "employee_id", type: "string", isOptional: true },
+            { name: "school_id", type: "string", isOptional: true },
+            { name: "school_name", type: "string", isOptional: true },
             { name: "department", type: "string", isOptional: true },
             { name: "phone", type: "string", isOptional: true },
             { name: "address", type: "string", isOptional: true },

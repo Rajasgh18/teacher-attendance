@@ -12,6 +12,8 @@ export default appSchema({
         { name: "first_name", type: "string" },
         { name: "last_name", type: "string" },
         { name: "employee_id", type: "string", isOptional: true },
+        { name: "school_id", type: "string", isOptional: true },
+        { name: "school_name", type: "string", isOptional: true },
         { name: "department", type: "string", isOptional: true },
         { name: "phone", type: "string", isOptional: true },
         { name: "address", type: "string", isOptional: true },
@@ -25,6 +27,7 @@ export default appSchema({
       name: "classes",
       columns: [
         { name: "class_id", type: "string" },
+        { name: "school_id", type: "string" },
         { name: "name", type: "string" },
         { name: "grade", type: "string" },
         { name: "section", type: "string" },

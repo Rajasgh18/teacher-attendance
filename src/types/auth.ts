@@ -9,7 +9,7 @@ export interface RegisterRequest {
 }
 
 export interface LoginRequest {
-  email: string;
+  employeeId: string;
   password: string;
 }
 

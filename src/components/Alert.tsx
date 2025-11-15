@@ -169,7 +169,9 @@ const Alert: React.FC<AlertProps> = ({
                 ]}
                 onPress={onDismiss}
               >
-                <Text style={styles.buttonText}>OK</Text>
+                <Text style={[styles.buttonText, { color: colors.text }]}>
+                  OK
+                </Text>
               </TouchableOpacity>
             </View>
           )}

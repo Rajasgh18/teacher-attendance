@@ -96,7 +96,7 @@ export default function Home() {
 
   if (!user) {
     navigation.navigate("Login");
-    return;
+    return <></>;
   }
 
   if (error) {

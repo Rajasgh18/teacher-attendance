@@ -13,13 +13,16 @@
     "format:fix": "prettier --write ."
   },
   "dependencies": {
+    "@nozbe/simdjson": "^3.9.4",
     "@nozbe/watermelondb": "^0.28.0",
     "@nozbe/with-observables": "^1.6.0",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/geolocation": "^3.4.0",
     "@react-native-community/netinfo": "^11.4.1",
     "@react-native/new-app-screen": "0.80.2",
-    "@react-navigation/native": "^6.1.17",
+    "@react-navigation/bottom-tabs": "^6.5.16",
+    "@react-navigation/native": "^6.1.18",
+    "@react-navigation/native-stack": "6.9.12",
     "@react-navigation/stack": "^6.4.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",

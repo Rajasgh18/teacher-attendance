@@ -62,12 +62,12 @@ export default function AddEditMarksScreen() {
     }
   }, [subjectId]);
 
-  // Simple mounting effect to load data
+  // Ensure we have required params and then load data
   useEffect(() => {
-    if (subjectId) {
+    if (subjectId && classId) {
       loadData();
     }
-  }, [subjectId]);
+  }, [subjectId, classId]);
 
   // Set month from route params if editing
   useEffect(() => {
@@ -83,7 +83,7 @@ export default function AddEditMarksScreen() {
   }, [mode, month, selectedMonth]);
 
   const loadData = async () => {
-    if (!subjectId) return;
+    if (!subjectId || !classId) return;
     try {
       setLoading(true);
 
@@ -99,35 +99,9 @@ export default function AddEditMarksScreen() {
       }
       setSubject(subjectData);
 
-      // Get class information - either from route params or teacher assignment
-      let classData;
-      let classIdToUse: string;
-
-      if (classId) {
-        // Use classId from route params if provided
-        classData = await DatabaseService.getClassByClassId(classId);
-        classIdToUse = classId;
-      } else {
-        // Fallback to teacher assignment lookup
-        const teacherAssignment =
-          await DatabaseService.getTeacherAssignmentBySubject(
-            subjectId,
-            user?.id,
-          );
-        if (!teacherAssignment) {
-          showAlert({
-            title: "No Class Assignment",
-            message:
-              "This subject is not assigned to any class. Please contact your administrator.",
-            type: "error",
-          });
-          return;
-        }
-        classData = await DatabaseService.getClassByClassId(
-          teacherAssignment.classId,
-        );
-        classIdToUse = teacherAssignment.classId;
-      }
+      // Get class information from route params (required)
+      const classData = await DatabaseService.getClassByClassId(classId);
+      const classIdToUse: string = classId;
 
       if (!classData) {
         showAlert({

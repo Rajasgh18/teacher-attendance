@@ -1,12 +1,14 @@
 import { User } from "../types";
 
 // Navigation parameter types
-export type RootStackParamList = {
+export type CommonStackParamList = {
   Login: undefined;
   DataSync: { user: User };
-  Dashboard: undefined;
   Attendance: undefined;
   Profile: undefined;
+};
+export type TeacherStackParamList = {
+  Home: undefined;
   ClassDetails: {
     classId: string;
   };
@@ -27,6 +29,16 @@ export type RootStackParamList = {
     month?: string;
   };
 };
+
+export type PrincipalStackParamList = {
+  Tabs: {
+    screen: "Home" | "Student" | "Class" | "Subject";
+  };
+};
+
+export type RootStackParamList = CommonStackParamList &
+  TeacherStackParamList &
+  PrincipalStackParamList;
 
 // Navigation method types
 export type NavigationProps = {

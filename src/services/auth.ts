@@ -15,7 +15,7 @@ class AuthService {
   private static readonly REFRESH_TOKEN_KEY = "refresh_token";
 
   /**
-   * Login user with email and password
+   * Login user with employee ID and password
    */
   static async login(credentials: LoginRequest): Promise<AuthResponse> {
     try {
@@ -122,6 +122,52 @@ class AuthService {
     }
   }
 
+  /**
+   * Update user profile
+   */
+  static async updateProfile(profileData: {
+    firstName: string;
+    lastName: string;
+    employeeId: string;
+  }): Promise<User> {
+    try {
+      const user = await this.getStoredUser();
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const { usersApi } = await import("@/lib/api");
+      const updatedUser = await usersApi.update(user.id, profileData);
+
+      // Update stored user data
+      await this.storeUser(updatedUser);
+
+      return updatedUser;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Change user password
+   */
+  static async changePassword(passwordData: {
+    currentPassword: string;
+    newPassword: string;
+  }): Promise<void> {
+    try {
+      const user = await this.getStoredUser();
+      if (!user) {
+        throw new Error("User not found");
+      }
+
+      const { usersApi } = await import("@/lib/api");
+      await usersApi.changePassword(user.id, passwordData);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
   static async getCurrentUserFromStore(): Promise<User | null> {
     const user = await this.getStoredUser();
     return user;
@@ -201,6 +247,14 @@ class AuthService {
    */
   private static async storeUser(user: User): Promise<void> {
     await AsyncStorage.setItem(this.USER_KEY, JSON.stringify(user));
+
+    // // Also store in local database
+    // try {
+    //   const { DatabaseService } = await import("./databaseService");
+    //   await DatabaseService.storeUserFromApi(user);
+    // } catch (error) {
+    //   console.error("Error storing user in database:", error);
+    // }
   }
 
   /**

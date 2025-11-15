@@ -26,11 +26,13 @@ import { useUserStore } from "@/stores/userStore";
 import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { SyncStatus } from "@/components/profile/sync-status";
+import { useConnectivity } from "@/hooks/useConnectivity";
+import { ConnectivityBanner } from "@/components/ConnectivityBanner";
 
 interface ProfileFormData {
   firstName: string;
   lastName: string;
-  email: string;
+  employeeId: string;
 }
 
 interface PasswordFormData {
@@ -39,11 +41,12 @@ interface PasswordFormData {
   confirmPassword: string;
 }
 
-export default function ProfilePage() {
+export default function ProfileScreen() {
   const { showAlert } = useAlert();
   const { colors } = useTheme();
   const navigation = useNavigation();
   const { user, setUser } = useUserStore();
+  const { isOnline } = useConnectivity();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -53,7 +56,7 @@ export default function ProfilePage() {
   const [profileForm, setProfileForm] = useState<ProfileFormData>({
     firstName: user?.firstName || "",
     lastName: user?.lastName || "",
-    email: user?.email || "",
+    employeeId: user?.employeeId || "",
   });
 
   const [passwordForm, setPasswordForm] = useState<PasswordFormData>({
@@ -116,7 +119,20 @@ export default function ProfilePage() {
   };
 
   const handleUpdateProfile = async () => {
-    if (!profileForm.firstName || !profileForm.lastName || !profileForm.email) {
+    if (!isOnline) {
+      showAlert({
+        title: "No Internet Connection",
+        message: "Please check your internet connection and try again",
+        type: "error",
+      });
+      return;
+    }
+
+    if (
+      !profileForm.firstName ||
+      !profileForm.lastName ||
+      !profileForm.employeeId
+    ) {
       showAlert({
         title: "Error",
         message: "Please fill in all fields",
@@ -127,9 +143,8 @@ export default function ProfilePage() {
 
     setIsLoading(true);
     try {
-      // TODO: Implement profile update API call
-      // const updatedUser = await AuthService.updateProfile(profileForm);
-      // setUser(updatedUser);
+      const updatedUser = await AuthService.updateProfile(profileForm);
+      setUser(updatedUser);
 
       showAlert({
         title: "Success",
@@ -151,6 +166,15 @@ export default function ProfilePage() {
   };
 
   const handleChangePassword = async () => {
+    if (!isOnline) {
+      showAlert({
+        title: "No Internet Connection",
+        message: "Please check your internet connection and try again",
+        type: "error",
+      });
+      return;
+    }
+
     if (
       !passwordForm.currentPassword ||
       !passwordForm.newPassword ||
@@ -184,8 +208,10 @@ export default function ProfilePage() {
 
     setIsLoading(true);
     try {
-      // TODO: Implement password change API call
-      // await AuthService.changePassword(passwordForm);
+      await AuthService.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
 
       showAlert({
         title: "Success",
@@ -253,6 +279,7 @@ export default function ProfilePage() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
         <Appbar title="Profile" subtitle="Manage your account" />
+        <ConnectivityBanner />
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -279,7 +306,7 @@ export default function ProfilePage() {
                 style={[styles.profileInitials, { color: colors.onPrimary }]}
               >
                 {user.firstName.charAt(0)}
-                {user.lastName.charAt(0)}
+                {user.lastName?.charAt(0)}
               </Text>
             </View>
             <Text style={[styles.profileName, { color: colors.text }]}>
@@ -288,7 +315,7 @@ export default function ProfilePage() {
             <Text
               style={[styles.profileEmail, { color: colors.textSecondary }]}
             >
-              {user.email}
+              {user.employeeId}
             </Text>
             <View style={styles.roleContainer}>
               <RoleIcon size={16} color={getRoleColor(user.role)} />
@@ -307,8 +334,17 @@ export default function ProfilePage() {
                 Personal Information
               </Text>
               <TouchableOpacity
-                style={[styles.editButton, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.editButton,
+                  {
+                    backgroundColor: isOnline
+                      ? colors.primary
+                      : colors.textTertiary,
+                    opacity: isOnline ? 1 : 0.6,
+                  },
+                ]}
                 onPress={() => setIsEditing(!isEditing)}
+                disabled={!isOnline}
               >
                 <Text
                   style={[styles.editButtonText, { color: colors.onPrimary }]}
@@ -337,13 +373,14 @@ export default function ProfilePage() {
                       borderColor: colors.border,
                       color: colors.text,
                       backgroundColor: colors.surfaceElevated,
+                      opacity: isOnline ? 1 : 0.6,
                     },
                   ]}
                   value={profileForm.firstName}
                   onChangeText={text =>
                     setProfileForm({ ...profileForm, firstName: text })
                   }
-                  editable={isEditing}
+                  editable={isEditing && isOnline}
                   placeholder="Enter first name"
                   placeholderTextColor={colors.textTertiary}
                 />
@@ -362,13 +399,14 @@ export default function ProfilePage() {
                       borderColor: colors.border,
                       color: colors.text,
                       backgroundColor: colors.surfaceElevated,
+                      opacity: isOnline ? 1 : 0.6,
                     },
                   ]}
                   value={profileForm.lastName}
                   onChangeText={text =>
                     setProfileForm({ ...profileForm, lastName: text })
                   }
-                  editable={isEditing}
+                  editable={isEditing && isOnline}
                   placeholder="Enter last name"
                   placeholderTextColor={colors.textTertiary}
                 />
@@ -378,7 +416,7 @@ export default function ProfilePage() {
                 <Text
                   style={[styles.fieldLabel, { color: colors.textSecondary }]}
                 >
-                  Email
+                  Employee ID
                 </Text>
                 <TextInput
                   style={[
@@ -387,16 +425,16 @@ export default function ProfilePage() {
                       borderColor: colors.border,
                       color: colors.text,
                       backgroundColor: colors.surfaceElevated,
+                      opacity: isOnline ? 1 : 0.6,
                     },
                   ]}
-                  value={profileForm.email}
+                  value={profileForm.employeeId}
                   onChangeText={text =>
-                    setProfileForm({ ...profileForm, email: text })
+                    setProfileForm({ ...profileForm, employeeId: text })
                   }
-                  editable={isEditing}
-                  placeholder="Enter email"
+                  editable={isEditing && isOnline}
+                  placeholder="Enter employee ID"
                   placeholderTextColor={colors.textTertiary}
-                  keyboardType="email-address"
                   autoCapitalize="none"
                 />
               </View>
@@ -405,10 +443,15 @@ export default function ProfilePage() {
                 <TouchableOpacity
                   style={[
                     styles.saveButton,
-                    { backgroundColor: colors.primary },
+                    {
+                      backgroundColor: isOnline
+                        ? colors.primary
+                        : colors.textTertiary,
+                      opacity: isOnline ? 1 : 0.6,
+                    },
                   ]}
                   onPress={handleUpdateProfile}
-                  disabled={isLoading}
+                  disabled={isLoading || !isOnline}
                 >
                   <Text
                     style={[styles.saveButtonText, { color: colors.onPrimary }]}
@@ -427,8 +470,17 @@ export default function ProfilePage() {
                 Security
               </Text>
               <TouchableOpacity
-                style={[styles.editButton, { backgroundColor: colors.primary }]}
+                style={[
+                  styles.editButton,
+                  {
+                    backgroundColor: isOnline
+                      ? colors.primary
+                      : colors.textTertiary,
+                    opacity: isOnline ? 1 : 0.6,
+                  },
+                ]}
                 onPress={() => setIsChangingPassword(!isChangingPassword)}
+                disabled={!isOnline}
               >
                 <Text
                   style={[styles.editButtonText, { color: colors.onPrimary }]}
@@ -457,7 +509,13 @@ export default function ProfilePage() {
                   ]}
                 >
                   <TextInput
-                    style={[styles.passwordInput, { color: colors.text }]}
+                    style={[
+                      styles.passwordInput,
+                      {
+                        color: colors.text,
+                        opacity: isOnline ? 1 : 0.6,
+                      },
+                    ]}
                     value={passwordForm.currentPassword}
                     onChangeText={text =>
                       setPasswordForm({
@@ -468,6 +526,7 @@ export default function ProfilePage() {
                     secureTextEntry={!showCurrentPassword}
                     placeholder="Enter current password"
                     placeholderTextColor={colors.textTertiary}
+                    editable={isChangingPassword && isOnline}
                   />
                   <TouchableOpacity
                     style={styles.eyeButton}
@@ -495,7 +554,13 @@ export default function ProfilePage() {
                   ]}
                 >
                   <TextInput
-                    style={[styles.passwordInput, { color: colors.text }]}
+                    style={[
+                      styles.passwordInput,
+                      {
+                        color: colors.text,
+                        opacity: isOnline ? 1 : 0.6,
+                      },
+                    ]}
                     value={passwordForm.newPassword}
                     onChangeText={text =>
                       setPasswordForm({ ...passwordForm, newPassword: text })
@@ -503,6 +568,7 @@ export default function ProfilePage() {
                     secureTextEntry={!showNewPassword}
                     placeholder="Enter new password"
                     placeholderTextColor={colors.textTertiary}
+                    editable={isChangingPassword && isOnline}
                   />
                   <TouchableOpacity
                     style={styles.eyeButton}
@@ -530,7 +596,13 @@ export default function ProfilePage() {
                   ]}
                 >
                   <TextInput
-                    style={[styles.passwordInput, { color: colors.text }]}
+                    style={[
+                      styles.passwordInput,
+                      {
+                        color: colors.text,
+                        opacity: isOnline ? 1 : 0.6,
+                      },
+                    ]}
                     value={passwordForm.confirmPassword}
                     onChangeText={text =>
                       setPasswordForm({
@@ -541,6 +613,7 @@ export default function ProfilePage() {
                     secureTextEntry={!showConfirmPassword}
                     placeholder="Confirm new password"
                     placeholderTextColor={colors.textTertiary}
+                    editable={isChangingPassword && isOnline}
                   />
                   <TouchableOpacity
                     style={styles.eyeButton}
@@ -559,10 +632,15 @@ export default function ProfilePage() {
                 <TouchableOpacity
                   style={[
                     styles.saveButton,
-                    { backgroundColor: colors.primary },
+                    {
+                      backgroundColor: isOnline
+                        ? colors.primary
+                        : colors.textTertiary,
+                      opacity: isOnline ? 1 : 0.6,
+                    },
                   ]}
                   onPress={handleChangePassword}
-                  disabled={isLoading}
+                  disabled={isLoading || !isOnline}
                 >
                   <Text
                     style={[styles.saveButtonText, { color: colors.onPrimary }]}

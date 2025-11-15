@@ -11,7 +11,7 @@ import { Download, Plus } from "lucide-react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Marks, Student } from "@/types";
+import { Marks, Student, Subject, Class } from "@/types";
 import { Appbar } from "@/components/appbar";
 import { useNavigation } from "@/navigation";
 import { MarksList } from "@/components/marks";
@@ -19,8 +19,12 @@ import { Dropdown } from "@/components/Dropdown";
 import { useUserStore } from "@/stores/userStore";
 import { useAlert } from "@/contexts/AlertContext";
 import { useTheme } from "@/contexts/ThemeContext";
-import { SubjectWithClass } from "@/services/subjects";
-import { MarksService, SubjectsService, StudentsService } from "@/services";
+import {
+  MarksService,
+  SubjectsService,
+  StudentsService,
+  DatabaseService,
+} from "@/services";
 
 const months = [
   "January",
@@ -44,54 +48,61 @@ export default function MarksPage() {
   const navigation = useNavigation();
 
   const [loading, setLoading] = useState(true);
-  const [subjectsWithClass, setSubjectsWithClass] = useState<
-    SubjectWithClass[]
-  >([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
+  const [classes, setClasses] = useState<Class[]>([]);
   const [subjectMarksData, setSubjectMarksData] = useState<Marks[]>([]);
-  const [selectedSubjectWithClass, setSelectedSubjectWithClass] =
-    useState<SubjectWithClass | null>(null);
+  const [selectedSubjectId, setSelectedSubjectId] = useState<string>("");
+  const [selectedClassId, setSelectedClassId] = useState<string>("");
   const [selectedMonth, setSelectedMonth] = useState<string>("");
   const [students, setStudents] = useState<Student[]>([]);
 
   useEffect(() => {
     if (user) {
-      loadSubjects();
+      loadOptions();
     }
   }, [user]);
 
   useEffect(() => {
-    if (selectedSubjectWithClass) {
+    if (selectedClassId) {
+      // refresh students list for selected class
+      StudentsService.getStudentsByClass(selectedClassId).then(setStudents);
+    }
+  }, [selectedClassId]);
+
+  useEffect(() => {
+    if (selectedSubjectId && selectedClassId) {
       loadSubjectMarksData();
     }
-  }, [selectedSubjectWithClass]);
+  }, [selectedSubjectId, selectedClassId]);
 
   // Refresh marks data when screen comes into focus (e.g., after adding/editing marks)
   useFocusEffect(
     useCallback(() => {
-      if (selectedSubjectWithClass && selectedMonth) {
+      if (selectedSubjectId && selectedClassId && selectedMonth) {
         loadSubjectMarksData();
       }
-    }, [selectedSubjectWithClass, selectedMonth]),
+    }, [selectedSubjectId, selectedClassId, selectedMonth]),
   );
 
-  const loadSubjects = async () => {
+  const loadOptions = async () => {
     try {
       setLoading(true);
-      if (!user?.id) return;
-      const [subjectsWithClassData, allStudents] = await Promise.all([
-        SubjectsService.getSubjectsWithClassForTeacher(user.id),
-        StudentsService.getAllStudents(),
+      const [allSubjects, allClasses] = await Promise.all([
+        SubjectsService.getAllSubjects(),
+        DatabaseService.getAllClasses(),
       ]);
-      setSubjectsWithClass(subjectsWithClassData);
-      setStudents(allStudents);
-      if (subjectsWithClassData.length > 0) {
-        setSelectedSubjectWithClass(subjectsWithClassData[0]);
-      }
+      setSubjects(allSubjects);
+      setClasses(
+        allClasses.map(cls => ({
+          ...cls,
+          id: cls.classId || cls.id,
+        })) as unknown as Class[],
+      );
     } catch (error) {
-      console.error("Error loading subjects:", error);
+      console.error("Error loading options:", error);
       showAlert({
         title: "Error",
-        message: "Failed to load subjects",
+        message: "Failed to load subjects/classes",
         type: "error",
       });
     } finally {
@@ -100,12 +111,12 @@ export default function MarksPage() {
   };
 
   const loadSubjectMarksData = async () => {
-    if (!selectedSubjectWithClass) return;
+    if (!selectedSubjectId || !selectedClassId) return;
 
     try {
       const allMarks = await MarksService.getSubjectMarksByClass(
-        selectedSubjectWithClass.subject.id,
-        selectedSubjectWithClass.class.id,
+        selectedSubjectId,
+        selectedClassId,
       );
       setSubjectMarksData(allMarks);
       if (allMarks.length > 0 && !selectedMonth) {
@@ -149,19 +160,24 @@ export default function MarksPage() {
           contentContainerStyle={styles.scrollContent}
         >
           <Dropdown
-            placeholder="Select Subject & Class"
-            options={subjectsWithClass.map(subjectWithClass => ({
-              id: subjectWithClass.assignmentId,
-              label: `${subjectWithClass.subject.name} - ${subjectWithClass.class.name} (${subjectWithClass.class.grade}${subjectWithClass.class.section})`,
-              value: subjectWithClass.assignmentId,
+            placeholder="Select Class"
+            options={classes.map(c => ({
+              id: c.id,
+              label: `${c.name} (Grade ${c.grade}${c.section})`,
+              value: c.classId || c.id,
             }))}
-            selectedValue={selectedSubjectWithClass?.assignmentId}
-            onSelect={option => {
-              const selected = subjectsWithClass.find(
-                s => s.assignmentId === option.value,
-              );
-              setSelectedSubjectWithClass(selected || null);
-            }}
+            selectedValue={selectedClassId}
+            onSelect={option => setSelectedClassId(option.value)}
+          />
+          <Dropdown
+            placeholder="Select Subject"
+            options={subjects.map(s => ({
+              id: s.id,
+              label: s.name,
+              value: s.id,
+            }))}
+            selectedValue={selectedSubjectId}
+            onSelect={option => setSelectedSubjectId(option.value)}
           />
           <Dropdown
             placeholder="Select Month"
@@ -177,18 +193,18 @@ export default function MarksPage() {
           />
 
           {/* Marks List */}
-          {selectedMonth && (
+          {selectedSubjectId && selectedClassId && selectedMonth && (
             <MarksList
               marks={subjectMarksData.filter(
                 mark => mark.month === selectedMonth,
               )}
               students={students}
               onEditMarks={() => {
-                if (selectedSubjectWithClass && selectedMonth) {
+                if (selectedSubjectId && selectedClassId && selectedMonth) {
                   navigation.navigate("AddEditMarks", {
                     mode: "edit",
-                    subjectId: selectedSubjectWithClass.subject.id,
-                    classId: selectedSubjectWithClass.class.id,
+                    subjectId: selectedSubjectId,
+                    classId: selectedClassId,
                     month: selectedMonth,
                   });
                 }
@@ -197,7 +213,7 @@ export default function MarksPage() {
           )}
 
           {/* Action Buttons */}
-          {selectedSubjectWithClass && selectedMonth && (
+          {selectedSubjectId && selectedClassId && selectedMonth && (
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[
@@ -222,18 +238,17 @@ export default function MarksPage() {
                   },
                 ]}
                 onPress={() => {
-                  if (selectedSubjectWithClass && selectedMonth) {
+                  if (selectedSubjectId && selectedClassId && selectedMonth) {
                     navigation.navigate("AddEditMarks", {
                       mode: "add",
-                      subjectId: selectedSubjectWithClass.subject.id,
-                      classId: selectedSubjectWithClass.class.id,
+                      subjectId: selectedSubjectId,
+                      classId: selectedClassId,
                       month: selectedMonth,
                     });
                   } else {
                     showAlert({
                       title: "Selection Required",
-                      message:
-                        "Please select both subject and month before adding marks",
+                      message: "Please select subject, class and month",
                       type: "warning",
                     });
                   }

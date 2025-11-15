@@ -188,6 +188,8 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   useEffect(() => {
     if (themeMode === "system") {
       setThemeMode(systemColorScheme === "dark" ? "dark" : "light");
+    } else {
+      setThemeMode(systemColorScheme as ThemeMode);
     }
   }, [systemColorScheme, themeMode]);
 

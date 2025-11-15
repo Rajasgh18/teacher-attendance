@@ -5,6 +5,7 @@ export default class Class extends Model {
   static table = "classes";
 
   @field("class_id") classId!: string;
+  @field("school_id") schoolId!: string;
   @field("name") name!: string;
   @field("grade") grade!: string;
   @field("section") section!: string;
