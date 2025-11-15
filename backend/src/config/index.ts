@@ -39,19 +39,6 @@ const envSchema = z.object({
   CORS_ORIGIN: z
     .string()
     .default("http://localhost:3000,http://localhost:3001"),
-
-  // File Upload
-  MAX_FILE_SIZE: z.string().default("5242880").transform(Number),
-  UPLOAD_PATH: z.string().default("uploads"),
-
-  // Email
-  SMTP_HOST: z.string().optional(),
-  SMTP_PORT: z.string().transform(Number).optional(),
-  SMTP_USER: z.string().optional(),
-  SMTP_PASS: z.string().optional(),
-
-  // Redis
-  REDIS_URL: z.string().optional(),
 });
 
 // Parse and validate environment variables
@@ -105,22 +92,6 @@ export const config = {
 
   cors: {
     origin: env.CORS_ORIGIN.split(",").map((origin: string) => origin.trim()),
-  },
-
-  upload: {
-    maxFileSize: env.MAX_FILE_SIZE,
-    path: env.UPLOAD_PATH,
-  },
-
-  email: {
-    host: env.SMTP_HOST,
-    port: env.SMTP_PORT,
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
-
-  redis: {
-    url: env.REDIS_URL,
   },
 } as const;
 
