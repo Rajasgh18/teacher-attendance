@@ -2,7 +2,12 @@ import { Request, Response } from "express";
 
 import { asyncHandler } from "@/middleware/errorHandler";
 import { AttendanceService } from "@/services/attendanceService";
-import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
+import {
+  sendSuccess,
+  sendCreated,
+  sendBadRequest,
+  sendNotFound,
+} from "@/utils/response";
 
 export class AttendanceController {
   // Get all student attendance records (accessible by teachers and admins)
@@ -148,7 +153,10 @@ export class AttendanceController {
           "Student attendance record created successfully"
         );
       } catch (error: any) {
-        sendBadRequest(res, error.message || "Failed to create student attendance");
+        sendBadRequest(
+          res,
+          error.message || "Failed to create student attendance"
+        );
       }
     }
   );
@@ -170,7 +178,10 @@ export class AttendanceController {
           "Student attendance records created successfully"
         );
       } catch (error: any) {
-        sendBadRequest(res, error.message || "Failed to create student attendance records");
+        sendBadRequest(
+          res,
+          error.message || "Failed to create student attendance records"
+        );
       }
     }
   );
@@ -200,7 +211,10 @@ export class AttendanceController {
         if (error.message?.includes("not found")) {
           sendNotFound(res, error.message);
         } else {
-          sendBadRequest(res, error.message || "Failed to update student attendance");
+          sendBadRequest(
+            res,
+            error.message || "Failed to update student attendance"
+          );
         }
       }
     }
@@ -218,12 +232,19 @@ export class AttendanceController {
 
       try {
         await AttendanceService.deleteStudentAttendance(id);
-        sendSuccess(res, null, "Student attendance record deleted successfully");
+        sendSuccess(
+          res,
+          null,
+          "Student attendance record deleted successfully"
+        );
       } catch (error: any) {
         if (error.message?.includes("not found")) {
           sendNotFound(res, error.message);
         } else {
-          sendBadRequest(res, error.message || "Failed to delete student attendance");
+          sendBadRequest(
+            res,
+            error.message || "Failed to delete student attendance"
+          );
         }
       }
     }
@@ -281,7 +302,10 @@ export class AttendanceController {
           "Teacher attendance record created successfully"
         );
       } catch (error: any) {
-        sendBadRequest(res, error.message || "Failed to create teacher attendance");
+        sendBadRequest(
+          res,
+          error.message || "Failed to create teacher attendance"
+        );
       }
     }
   );
@@ -304,7 +328,10 @@ export class AttendanceController {
           "Teacher attendance records created successfully"
         );
       } catch (error: any) {
-        sendBadRequest(res, error.message || "Failed to create teacher attendance records");
+        sendBadRequest(
+          res,
+          error.message || "Failed to create teacher attendance records"
+        );
       }
     }
   );
