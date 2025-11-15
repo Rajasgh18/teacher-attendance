@@ -1,4 +1,4 @@
-import { eq, and, like, asc } from "drizzle-orm";
+import { eq, and, like, asc, ilike } from "drizzle-orm";
 
 import { users, classes, students, studentAttendance } from "@/db/schema";
 import { db } from "@/db";
@@ -24,8 +24,7 @@ export class StudentService {
     if (search) {
       whereConditions.push(
         and(
-          like(students.firstName, `%${search}%`),
-          like(students.lastName, `%${search}%`)
+          ilike(students.firstName, `%${search}%`)
         )
       );
     }
@@ -51,6 +50,7 @@ export class StudentService {
           lastName: students.lastName,
           email: students.email,
           phone: students.phone,
+          schoolId: students.schoolId,
           address: students.address,
           dateOfBirth: students.dateOfBirth,
           gender: students.gender,
@@ -106,6 +106,7 @@ export class StudentService {
         isActive: students.isActive,
         createdAt: students.createdAt,
         updatedAt: students.updatedAt,
+        schoolId: students.schoolId,
         class: {
           id: classes.id,
           name: classes.name,

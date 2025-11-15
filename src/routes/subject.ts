@@ -12,6 +12,7 @@ router.get("/:id/marks", SubjectController.getSubjectMarks);
 router.post("/", SubjectController.createSubject);
 router.post("/marks/bulk", SubjectController.createSubjectMarksBulk);
 
+router.get("/:id", SubjectController.getSubjectById);
 router.put("/:id", SubjectController.updateSubject);
 
 router.delete("/:id", SubjectController.deleteSubject);

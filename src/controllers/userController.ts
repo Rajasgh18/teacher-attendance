@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 
 import { UserService } from "@/services/userService";
 import { asyncHandler } from "@/middleware/errorHandler";
-import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
+import { sendSuccess, sendCreated, sendBadRequest, sendNotFound } from "@/utils/response";
 import { StudentService } from "@/services/studentService";
 import { AttendanceStatus } from "@/types";
 
@@ -21,8 +21,12 @@ export class UserController {
     if (schoolId) query.schoolId = schoolId as string;
     if (isActive !== undefined) query.isActive = isActive === "true";
 
-    const result = await UserService.getAll(query);
-    sendSuccess(res, result, "Users retrieved successfully");
+    try {
+      const result = await UserService.getAll(query);
+      sendSuccess(res, result, "Users retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve users");
+    }
   });
 
   // Get all classes of a user
@@ -32,8 +36,12 @@ export class UserController {
       return;
     }
 
-    const classes = await UserService.getClasses(req.user.userId);
-    sendSuccess(res, classes, "Classes retrieved successfully");
+    try {
+      const classes = await UserService.getClasses(req.user.userId);
+      sendSuccess(res, classes, "Classes retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve classes");
+    }
   });
 
   // Get all teachers (admin only)
@@ -47,8 +55,12 @@ export class UserController {
     if (department) query.department = department as string;
     if (isActive !== undefined) query.isActive = isActive === "true";
 
-    const result = await UserService.getAllTeachers(query);
-    sendSuccess(res, result, "Teachers retrieved successfully");
+    try {
+      const result = await UserService.getAllTeachers(query);
+      sendSuccess(res, result, "Teachers retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve teachers");
+    }
   });
 
   // Get user by ID (admin only, or self)
@@ -60,8 +72,16 @@ export class UserController {
       return;
     }
 
-    const user = await UserService.getById(id);
-    sendSuccess(res, user, "User retrieved successfully");
+    try {
+      const user = await UserService.getById(id);
+      sendSuccess(res, user, "User retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve user");
+      }
+    }
   });
 
   // Get teacher by employee ID (admin only)
@@ -73,8 +93,16 @@ export class UserController {
       return;
     }
 
-    const teacher = await UserService.getByEmployeeId(employeeId);
-    sendSuccess(res, teacher, "Teacher retrieved successfully");
+    try {
+      const teacher = await UserService.getByEmployeeId(employeeId);
+      sendSuccess(res, teacher, "Teacher retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve teacher");
+      }
+    }
   });
 
   // Check in a user
@@ -93,16 +121,19 @@ export class UserController {
       return;
     }
 
-    const attendance = await UserService.checkIn({
-      teacherId: userId,
-      latitude,
-      longitude,
-      checkIn,
-      status,
-      notes,
-    });
-
-    sendSuccess(res, attendance, "Check in successful");
+    try {
+      const attendance = await UserService.checkIn({
+        teacherId: userId,
+        latitude,
+        longitude,
+        checkIn,
+        status,
+        notes,
+      });
+      sendSuccess(res, attendance, "Check in successful");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to check in");
+    }
   });
 
   // Get user by email (admin only)
@@ -114,8 +145,16 @@ export class UserController {
       return;
     }
 
-    const user = await UserService.getByEmail(email);
-    sendSuccess(res, user, "User retrieved successfully");
+    try {
+      const user = await UserService.getByEmail(email);
+      sendSuccess(res, user, "User retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve user");
+      }
+    }
   });
 
   // Create new user (admin only)
@@ -155,8 +194,8 @@ export class UserController {
       return;
     }
 
-    if (!["admin", "teacher"].includes(role)) {
-      sendBadRequest(res, "Role must be admin or teacher");
+    if (!["principal", "teacher"].includes(role)) {
+      sendBadRequest(res, "Role must be principal or teacher");
       return;
     }
 
@@ -191,22 +230,27 @@ export class UserController {
       }
     }
 
-    const user = await UserService.create({
-      schoolId,
-      email,
-      password,
-      firstName,
-      lastName,
-      role,
-      employeeId,
-      department,
-      phone,
-      address,
-      hireDate,
-      isActive,
-    });
-
-    sendCreated(res, user, "User created successfully");
+    try {
+      
+      const user = await UserService.create({
+        schoolId,
+        email,
+        password,
+        firstName,
+        lastName,
+        role,
+        employeeId,
+        department,
+        phone,
+        address,
+        hireDate,
+        isActive,
+      });
+      
+      sendCreated(res, user, "User created successfully");
+    } catch (error: any) {
+     sendBadRequest(res, error.toString()) 
+    }
   });
 
   // Update user (admin only, or self)
@@ -268,20 +312,23 @@ export class UserController {
       }
     }
 
-    const user = await UserService.update(id, {
-      email,
-      firstName,
-      lastName,
-      role,
-      employeeId,
-      department,
-      phone,
-      address,
-      hireDate,
-      isActive,
-    });
-
-    sendSuccess(res, user, "User updated successfully");
+    try {
+      const user = await UserService.update(id, {
+        email,
+        firstName,
+        lastName,
+        role,
+        employeeId,
+        department,
+        phone,
+        address,
+        hireDate,
+        isActive,
+      });
+      sendSuccess(res, user, "User updated successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to update user");
+    }
   });
 
   // Update user password (admin only, or self)
@@ -304,8 +351,16 @@ export class UserController {
       return;
     }
 
-    await UserService.updatePassword(id, newPassword);
-    sendSuccess(res, null, "Password updated successfully");
+    try {
+      await UserService.updatePassword(id, newPassword);
+      sendSuccess(res, null, "Password updated successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to update password");
+      }
+    }
   });
 
   // Change user password (requires current password)
@@ -328,8 +383,18 @@ export class UserController {
       return;
     }
 
-    await UserService.changePassword(id, currentPassword, newPassword);
-    sendSuccess(res, null, "Password changed successfully");
+    try {
+      await UserService.changePassword(id, currentPassword, newPassword);
+      sendSuccess(res, null, "Password changed successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else if (error.message?.includes("incorrect") || error.message?.includes("Invalid")) {
+        sendBadRequest(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to change password");
+      }
+    }
   });
 
   // Delete user (admin only)
@@ -341,8 +406,16 @@ export class UserController {
       return;
     }
 
-    await UserService.delete(id);
-    sendSuccess(res, null, "User deleted successfully");
+    try {
+      await UserService.delete(id);
+      sendSuccess(res, null, "User deleted successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to delete user");
+      }
+    }
   });
 
   // Get users by role (admin only)
@@ -359,8 +432,12 @@ export class UserController {
       return;
     }
 
-    const users = await UserService.getByRole(role as "admin" | "teacher");
-    sendSuccess(res, users, "Users retrieved successfully");
+    try {
+      const users = await UserService.getByRole(role as "admin" | "teacher");
+      sendSuccess(res, users, "Users retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve users");
+    }
   });
 
   // Get teachers by department (admin only)
@@ -373,21 +450,33 @@ export class UserController {
         return;
       }
 
-      const teachers = await UserService.getTeachersByDepartment(department);
-      sendSuccess(res, teachers, "Teachers retrieved successfully");
+      try {
+        const teachers = await UserService.getTeachersByDepartment(department);
+        sendSuccess(res, teachers, "Teachers retrieved successfully");
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to retrieve teachers");
+      }
     }
   );
 
   // Get all users (simplified, admin only)
   static getAllUsers = asyncHandler(async (req: Request, res: Response) => {
-    const users = await UserService.getAllUsers();
-    sendSuccess(res, users, "Users retrieved successfully");
+    try {
+      const users = await UserService.getAllUsers();
+      sendSuccess(res, users, "Users retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve users");
+    }
   });
 
   // Get user statistics (admin only)
   static getUserStats = asyncHandler(async (req: Request, res: Response) => {
-    const stats = await UserService.getUserStats();
-    sendSuccess(res, stats, "User statistics retrieved successfully");
+    try {
+      const stats = await UserService.getUserStats();
+      sendSuccess(res, stats, "User statistics retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve user statistics");
+    }
   });
 
   // Search users (admin only)
@@ -399,9 +488,13 @@ export class UserController {
       return;
     }
 
-    const searchLimit = limit ? parseInt(limit as string) : 10;
-    const users = await UserService.searchUsers(search as string, searchLimit);
-    sendSuccess(res, users, "Users retrieved successfully");
+    try {
+      const searchLimit = limit ? parseInt(limit as string) : 10;
+      const users = await UserService.searchUsers(search as string, searchLimit);
+      sendSuccess(res, users, "Users retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to search users");
+    }
   });
 
   // Get user profile (self)
@@ -413,8 +506,16 @@ export class UserController {
       return;
     }
 
-    const user = await UserService.getById(userId);
-    sendSuccess(res, user, "Profile retrieved successfully");
+    try {
+      const user = await UserService.getById(userId);
+      sendSuccess(res, user, "Profile retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve profile");
+      }
+    }
   });
 
   // Get teacher assignments (admin or self)
@@ -427,12 +528,16 @@ export class UserController {
         return;
       }
 
-      const assignments = await UserService.getTeacherAssignments(userId);
-      sendSuccess(
-        res,
-        assignments,
-        "Teacher assignments retrieved successfully"
-      );
+      try {
+        const assignments = await UserService.getTeacherAssignments(userId);
+        sendSuccess(
+          res,
+          assignments,
+          "Teacher assignments retrieved successfully"
+        );
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to retrieve teacher assignments");
+      }
     }
   );
 
@@ -446,8 +551,12 @@ export class UserController {
         return;
       }
 
-      const subjects = await UserService.getTeacherSubjects(teacherId);
-      sendSuccess(res, subjects, "Teacher subjects retrieved successfully");
+      try {
+        const subjects = await UserService.getTeacherSubjects(teacherId);
+        sendSuccess(res, subjects, "Teacher subjects retrieved successfully");
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to retrieve teacher subjects");
+      }
     }
   );
 
@@ -468,12 +577,16 @@ export class UserController {
         return;
       }
 
-      const liveLocation = await UserService.createLiveLocation(
-        userId,
-        latitude,
-        longitude
-      );
-      sendSuccess(res, liveLocation, "Live location created successfully");
+      try {
+        const liveLocation = await UserService.createLiveLocation(
+          userId,
+          latitude,
+          longitude
+        );
+        sendSuccess(res, liveLocation, "Live location created successfully");
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to create live location");
+      }
     }
   );
 }

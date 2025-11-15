@@ -16,7 +16,6 @@ import { db } from "@/db";
 import bcrypt from "bcryptjs";
 import { UserRole } from "@/types";
 import { and, desc, eq } from "drizzle-orm";
-import e from "cors";
 
 let allSchools: NewSchool[] = [];
 let allClass: NewClass[] = [];

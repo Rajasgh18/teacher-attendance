@@ -139,13 +139,17 @@ export class AttendanceController {
         return;
       }
 
-      const attendance =
-        await AttendanceService.createStudentAttendance(attendanceData);
-      sendCreated(
-        res,
-        attendance,
-        "Student attendance record created successfully"
-      );
+      try {
+        const attendance =
+          await AttendanceService.createStudentAttendance(attendanceData);
+        sendCreated(
+          res,
+          attendance,
+          "Student attendance record created successfully"
+        );
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to create student attendance");
+      }
     }
   );
 
@@ -157,13 +161,17 @@ export class AttendanceController {
         return;
       }
 
-      const attendance =
-        await AttendanceService.createStudentAttendanceBulk(attendanceData);
-      sendCreated(
-        res,
-        attendance,
-        "Student attendance records created successfully"
-      );
+      try {
+        const attendance =
+          await AttendanceService.createStudentAttendanceBulk(attendanceData);
+        sendCreated(
+          res,
+          attendance,
+          "Student attendance records created successfully"
+        );
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to create student attendance records");
+      }
     }
   );
 
@@ -178,15 +186,23 @@ export class AttendanceController {
         return;
       }
 
-      const attendance = await AttendanceService.updateStudentAttendance(
-        id,
-        updateData
-      );
-      sendSuccess(
-        res,
-        attendance,
-        "Student attendance record updated successfully"
-      );
+      try {
+        const attendance = await AttendanceService.updateStudentAttendance(
+          id,
+          updateData
+        );
+        sendSuccess(
+          res,
+          attendance,
+          "Student attendance record updated successfully"
+        );
+      } catch (error: any) {
+        if (error.message?.includes("not found")) {
+          sendNotFound(res, error.message);
+        } else {
+          sendBadRequest(res, error.message || "Failed to update student attendance");
+        }
+      }
     }
   );
 
@@ -200,8 +216,16 @@ export class AttendanceController {
         return;
       }
 
-      await AttendanceService.deleteStudentAttendance(id);
-      sendSuccess(res, null, "Student attendance record deleted successfully");
+      try {
+        await AttendanceService.deleteStudentAttendance(id);
+        sendSuccess(res, null, "Student attendance record deleted successfully");
+      } catch (error: any) {
+        if (error.message?.includes("not found")) {
+          sendNotFound(res, error.message);
+        } else {
+          sendBadRequest(res, error.message || "Failed to delete student attendance");
+        }
+      }
     }
   );
 
@@ -248,13 +272,17 @@ export class AttendanceController {
   static createTeacherAttendance = asyncHandler(
     async (req: Request, res: Response) => {
       const attendanceData = req.body;
-      const attendance =
-        await AttendanceService.createTeacherAttendance(attendanceData);
-      sendCreated(
-        res,
-        attendance,
-        "Teacher attendance record created successfully"
-      );
+      try {
+        const attendance =
+          await AttendanceService.createTeacherAttendance(attendanceData);
+        sendCreated(
+          res,
+          attendance,
+          "Teacher attendance record created successfully"
+        );
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to create teacher attendance");
+      }
     }
   );
 
@@ -267,13 +295,17 @@ export class AttendanceController {
         return;
       }
 
-      const attendance =
-        await AttendanceService.createTeacherAttendanceBulk(attendanceData);
-      sendCreated(
-        res,
-        attendance,
-        "Teacher attendance records created successfully"
-      );
+      try {
+        const attendance =
+          await AttendanceService.createTeacherAttendanceBulk(attendanceData);
+        sendCreated(
+          res,
+          attendance,
+          "Teacher attendance records created successfully"
+        );
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to create teacher attendance records");
+      }
     }
   );
 }

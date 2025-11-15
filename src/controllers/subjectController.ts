@@ -1,49 +1,90 @@
 import { SubjectService } from "@/services/subjectService";
-import { sendBadRequest, sendCreated, sendSuccess } from "@/utils/response";
+import { sendBadRequest, sendCreated, sendSuccess, sendNotFound } from "@/utils/response";
 import { Request, Response } from "express";
+import { asyncHandler } from "@/middleware/errorHandler";
 
 export class SubjectController {
-  static getAllSubjects = async (req: Request, res: Response) => {
-    const result = await SubjectService.getAllSubjects();
-    sendSuccess(res, { data: result }, "Subjects retrieved successfully");
-  };
+  static getAllSubjects = asyncHandler(async (req: Request, res: Response) => {
+    const { page, limit, search, schoolId } = req.query;
 
-  static createSubject = async (req: Request, res: Response) => {
-    const result = await SubjectService.createSubject(req.body);
-    sendCreated(res, result, "Subject created successfully");
-  };
+    const query: any = {};
+    if (page) query.page = parseInt(page as string);
+    if (limit) query.limit = parseInt(limit as string);
+    if (search) query.search = search as string;
+    if (schoolId) query.schoolId = schoolId as string;
 
-  static getSubjectById = async (req: Request, res: Response) => {
+    try {
+      const result = await SubjectService.getAllSubjects(query);
+      sendSuccess(res, result, "Subjects retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve subjects");
+    }
+  });
+
+  static createSubject = asyncHandler(async (req: Request, res: Response) => {
+    try {
+      const result = await SubjectService.createSubject(req.body);
+      sendCreated(res, result, "Subject created successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to create subject");
+    }
+  });
+
+  static getSubjectById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) {
       sendBadRequest(res, "Subject ID is required");
       return;
     }
-    const result = await SubjectService.getSubjectById(id);
-    sendSuccess(res, result, "Subject retrieved successfully");
-  };
+    try {
+      const result = await SubjectService.getSubjectById(id);
+      sendSuccess(res, result, "Subject retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve subject");
+      }
+    }
+  });
 
-  static getSubjectMarks = async (req: Request, res: Response) => {
+  static getSubjectMarks = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) {
       sendBadRequest(res, "Subject ID is required");
       return;
     }
-    const result = await SubjectService.getSubjectMarks(id);
-    sendSuccess(res, result, "Subject marks retrieved successfully");
-  };
+    try {
+      const result = await SubjectService.getSubjectMarks(id);
+      sendSuccess(res, result, "Subject marks retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve subject marks");
+      }
+    }
+  });
 
-  static addSubjectMarks = async (req: Request, res: Response) => {
+  static addSubjectMarks = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) {
       sendBadRequest(res, "Subject ID is required");
       return;
     }
-    const result = await SubjectService.addSubjectMarks(id, req.body);
-    sendCreated(res, result, "Subject marks added successfully");
-  };
+    try {
+      const result = await SubjectService.addSubjectMarks(id, req.body);
+      sendCreated(res, result, "Subject marks added successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to add subject marks");
+      }
+    }
+  });
 
-  static createSubjectMarksBulk = async (req: Request, res: Response) => {
+  static createSubjectMarksBulk = asyncHandler(async (req: Request, res: Response) => {
     try {
       const { marksData } = req.body;
 
@@ -68,29 +109,45 @@ export class SubjectController {
           `Successfully processed ${result.totalProcessed} marks`
         );
       }
-    } catch (error) {
-      console.error("Error in bulk marks creation:", error);
-      sendBadRequest(res, "Failed to process marks data");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to process marks data");
     }
-  };
+  });
 
-  static updateSubject = async (req: Request, res: Response) => {
+  static updateSubject = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) {
       sendBadRequest(res, "Subject ID is required");
       return;
     }
-    const result = await SubjectService.updateSubject(id, req.body);
-    sendSuccess(res, result, "Subject updated successfully");
-  };
 
-  static deleteSubject = async (req: Request, res: Response) => {
+    try {
+      const result = await SubjectService.updateSubject(id, req.body);
+      sendSuccess(res, result, "Subject updated successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to update subject");
+      }
+    }
+  });
+
+  static deleteSubject = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     if (!id) {
       sendBadRequest(res, "Subject ID is required");
       return;
     }
-    const result = await SubjectService.deleteSubject(id);
-    sendSuccess(res, result, "Subject deleted successfully");
-  };
+    try {
+      const result = await SubjectService.deleteSubject(id);
+      sendSuccess(res, result, "Subject deleted successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to delete subject");
+      }
+    }
+  });
 }

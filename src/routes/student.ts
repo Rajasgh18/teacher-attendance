@@ -2,7 +2,6 @@ import { Router } from "express";
 
 import {
   authenticate,
-  teacherOrAdmin,
   teacherFromSameSchoolAsStudentOrAdmin,
   adminOrPrincipal,
 } from "@/middleware/auth";

@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
 
 import { ClassService } from "@/services/classService";
-import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
+import { sendSuccess, sendCreated, sendBadRequest, sendNotFound } from "@/utils/response";
+import { asyncHandler } from "@/middleware/errorHandler";
 
 export class ClassController {
   // Get all classes (accessible by teachers and admins)
-  static getAll = async (req: Request, res: Response) => {
+  static getAll = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit, search, schoolId } = req.query;
 
     const query: any = {};
@@ -14,12 +15,16 @@ export class ClassController {
     if (search) query.search = search as string;
     if (schoolId) query.schoolId = schoolId as string;
 
-    const result = await ClassService.getBy(query);
-    sendSuccess(res, result, "Classes retrieved successfully");
-  };
+    try {
+      const result = await ClassService.getBy(query);
+      sendSuccess(res, result, "Classes retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve classes");
+    }
+  });
 
   // Get class by ID (accessible by teachers and admins)
-  static getById = async (req: Request, res: Response) => {
+  static getById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -27,12 +32,20 @@ export class ClassController {
       return;
     }
 
-    const classData = await ClassService.getById(id);
-    sendSuccess(res, classData, "Class retrieved successfully");
-  };
+    try {
+      const classData = await ClassService.getById(id);
+      sendSuccess(res, classData, "Class retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve class");
+      }
+    }
+  });
 
   // Create new class (admin only)
-  static create = async (req: Request, res: Response) => {
+  static create = asyncHandler(async (req: Request, res: Response) => {
     const {
       schoolId,
       name,
@@ -67,20 +80,23 @@ export class ClassController {
       return;
     }
 
-    const classData = await ClassService.create({
-      schoolId,
-      name,
-      grade,
-      section,
-      academicYear,
-      isActive,
-    });
-
-    sendCreated(res, classData, "Class created successfully");
-  };
+    try {
+      const classData = await ClassService.create({
+        schoolId,
+        name,
+        grade,
+        section,
+        academicYear,
+        isActive,
+      });
+      sendCreated(res, classData, "Class created successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to create class");
+    }
+  });
 
   // Update class (admin only)
-  static update = async (req: Request, res: Response) => {
+  static update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const { name, grade, section, academicYear, isActive } = req.body;
 
@@ -122,12 +138,20 @@ export class ClassController {
       updateData.isActive = isActive;
     }
 
-    const classData = await ClassService.update(id, updateData);
-    sendSuccess(res, classData, "Class updated successfully");
-  };
+    try {
+      const classData = await ClassService.update(id, updateData);
+      sendSuccess(res, classData, "Class updated successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to update class");
+      }
+    }
+  });
 
   // Delete class (soft delete - admin only)
-  static delete = async (req: Request, res: Response) => {
+  static delete = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -135,23 +159,39 @@ export class ClassController {
       return;
     }
 
-    await ClassService.delete(id);
-    sendSuccess(res, null, "Class deleted successfully");
-  };
+    try {
+      await ClassService.delete(id);
+      sendSuccess(res, null, "Class deleted successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to delete class");
+      }
+    }
+  });
 
   // Get students in a class (accessible by teachers and admins)
-  static getStudents = async (req: Request, res: Response) => {
+  static getStudents = asyncHandler(async (req: Request, res: Response) => {
     const query = req.query;
 
-    const students = await ClassService.getStudents(query);
-    sendSuccess(res, students, "Students retrieved successfully");
-  };
+    try {
+      const students = await ClassService.getStudents(query);
+      sendSuccess(res, students, "Students retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve students");
+    }
+  });
 
   // Get class with teacher assignments (accessible by teachers and admins)
-  static getTeachers = async (req: Request, res: Response) => {
+  static getTeachers = asyncHandler(async (req: Request, res: Response) => {
     const query = req.query;
 
-    const teachers = await ClassService.getTeachers(query);
-    sendSuccess(res, teachers, "Class teachers retrieved successfully");
-  };
+    try {
+      const teachers = await ClassService.getTeachers(query);
+      sendSuccess(res, teachers, "Class teachers retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve teachers");
+    }
+  });
 }

@@ -84,6 +84,7 @@ export class UserService {
           role: users.role,
           employeeId: users.employeeId,
           department: users.department,
+          schoolId: users.schoolId,
           phone: users.phone,
           address: users.address,
           hireDate: users.hireDate,
@@ -269,6 +270,7 @@ export class UserService {
           role: users.role,
           employeeId: users.employeeId,
           department: users.department,
+          schoolId: users.schoolId,
           phone: users.phone,
           address: users.address,
           hireDate: users.hireDate,
@@ -337,13 +339,24 @@ export class UserService {
     const { password, ...userData } = data;
 
     // Check if user already exists
-    const existingUser = await db
+    let existingUser = await db
       .select({ id: users.id })
       .from(users)
       .where(eq(users.employeeId, userData.employeeId));
 
     if (existingUser.length > 0) {
       throw new ConflictError("User with this employee ID already exists");
+    }
+
+    if (userData.email) {
+      existingUser = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.email, userData.email));
+
+      if (existingUser.length > 0) {
+        throw new ConflictError("User with this email already exists");
+      }
     }
 
     // Check if employee ID already exists for teachers

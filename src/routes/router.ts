@@ -6,6 +6,7 @@ import classRoutes from "./class";
 import studentRoutes from "./student";
 import attendanceRoutes from "./attendance";
 import subjectRoutes from "./subject";
+import schoolRoutes from "./schools";
 
 const appRouter: Router = Router();
 
@@ -25,5 +26,6 @@ appRouter.use("/class", classRoutes);
 appRouter.use("/student", studentRoutes);
 appRouter.use("/attendance", attendanceRoutes);
 appRouter.use("/subject", subjectRoutes);
+appRouter.use("/schools", schoolRoutes);
 
 export default appRouter;

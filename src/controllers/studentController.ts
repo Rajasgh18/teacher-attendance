@@ -2,11 +2,11 @@ import { Request, Response } from "express";
 
 import { asyncHandler } from "@/middleware/errorHandler";
 import { StudentService } from "@/services/studentService";
-import { sendSuccess, sendCreated, sendBadRequest } from "@/utils/response";
+import { sendSuccess, sendCreated, sendBadRequest, sendNotFound } from "@/utils/response";
 
 export class StudentController {
   // Get all students (accessible by teachers and admins)
-  static getAll = async (req: Request, res: Response) => {
+  static getAll = asyncHandler(async (req: Request, res: Response) => {
     const { page, limit, search, classId, schoolId } = req.query;
 
     const query: any = {};
@@ -16,12 +16,16 @@ export class StudentController {
     if (classId) query.classId = classId as string;
     if (schoolId) query.schoolId = schoolId as string;
 
-    const result = await StudentService.getAll(query);
-    sendSuccess(res, result, "Students retrieved successfully");
-  };
+    try {
+      const result = await StudentService.getAll(query);
+      sendSuccess(res, result, "Students retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve students");
+    }
+  });
 
   // Get student by ID (accessible by teachers and admins)
-  static getById = async (req: Request, res: Response) => {
+  static getById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -29,12 +33,20 @@ export class StudentController {
       return;
     }
 
-    const student = await StudentService.getById(id);
-    sendSuccess(res, student, "Student retrieved successfully");
-  };
+    try {
+      const student = await StudentService.getById(id);
+      sendSuccess(res, student, "Student retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve student");
+      }
+    }
+  });
 
   // Create new student (admin only)
-  static create = async (req: Request, res: Response) => {
+  static create = asyncHandler(async (req: Request, res: Response) => {
     const {
       studentId,
       firstName,
@@ -100,25 +112,28 @@ export class StudentController {
       return;
     }
 
-    const student = await StudentService.create({
-      studentId,
-      firstName,
-      lastName,
-      email,
-      phone,
-      address,
-      dateOfBirth,
-      gender,
-      schoolId,
-      classId,
-      isActive,
-    });
-
-    sendCreated(res, student, "Student created successfully");
-  };
+    try {
+      const student = await StudentService.create({
+        studentId,
+        firstName,
+        lastName,
+        email,
+        phone,
+        address,
+        dateOfBirth,
+        gender,
+        schoolId,
+        classId,
+        isActive,
+      });
+      sendCreated(res, student, "Student created successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to create student");
+    }
+  });
 
   // Update student (admin only)
-  static update = async (req: Request, res: Response) => {
+  static update = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const {
       studentId,
@@ -203,12 +218,20 @@ export class StudentController {
       updateData.isActive = isActive;
     }
 
-    const student = await StudentService.update(id, updateData);
-    sendSuccess(res, student, "Student updated successfully");
-  };
+    try {
+      const student = await StudentService.update(id, updateData);
+      sendSuccess(res, student, "Student updated successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to update student");
+      }
+    }
+  });
 
   // Delete student (soft delete - admin only)
-  static delete = async (req: Request, res: Response) => {
+  static delete = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
     if (!id) {
@@ -216,12 +239,20 @@ export class StudentController {
       return;
     }
 
-    await StudentService.delete(id);
-    sendSuccess(res, null, "Student deleted successfully");
-  };
+    try {
+      await StudentService.delete(id);
+      sendSuccess(res, null, "Student deleted successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to delete student");
+      }
+    }
+  });
 
   // Get student's attendance records (accessible by teachers and admins)
-  static getAttendance = async (req: Request, res: Response) => {
+  static getAttendance = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const { startDate, endDate, classId } = req.query;
 
@@ -235,7 +266,15 @@ export class StudentController {
     if (endDate) query.endDate = endDate as string;
     if (classId) query.classId = classId as string;
 
-    const attendance = await StudentService.getAttendance(id, query);
-    sendSuccess(res, attendance, "Student attendance retrieved successfully");
-  };
+    try {
+      const attendance = await StudentService.getAttendance(id, query);
+      sendSuccess(res, attendance, "Student attendance retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve student attendance");
+      }
+    }
+  });
 }

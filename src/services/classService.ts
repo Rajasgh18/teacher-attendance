@@ -19,7 +19,6 @@ export class ClassService {
     const offset = (page - 1) * limit;
 
     let whereConditions = [];
-
     if (search) {
       whereConditions.push(like(classes.name, `%${search}%`));
     }
