@@ -1,5 +1,6 @@
 import path from "path";
 import winston from "winston";
+import fs from "fs";
 
 import { config } from "@/config";
 
@@ -11,7 +12,7 @@ const levels = {
   debug: 3,
 };
 
-// Define colors for each level
+// Define colors
 const colors = {
   error: "red",
   warn: "yellow",
@@ -19,15 +20,9 @@ const colors = {
   debug: "blue",
 };
 
-// Tell winston that you want to link the colors
 winston.addColors(colors);
 
-// Define which level to log based on environment
-const level = () => {
-  return config.logging.level;
-};
-
-// Define format for logs
+// Define formats
 const format = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
   winston.format.colorize({ all: true }),
@@ -37,48 +32,44 @@ const format = winston.format.combine(
   )
 );
 
-// Define format for file logs (without colors)
 const fileFormat = winston.format.combine(
   winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss:ms" }),
   winston.format.errors({ stack: true }),
   winston.format.json()
 );
 
-// Define transports
-const transports = [
-  // Console transport
-  new winston.transports.Console({
-    format,
-  }),
+// Create transports
+const transports: winston.transport[] = [];
 
-  // File transport for errors
-  new winston.transports.File({
-    filename: path.join(process.cwd(), "logs", "error.log"),
-    level: "error",
-    format: fileFormat,
-  }),
+// Always log to console
+transports.push(new winston.transports.Console({ format }));
 
-  // File transport for all logs
-  new winston.transports.File({
-    filename: path.join(process.cwd(), "logs", "combined.log"),
-    format: fileFormat,
-  }),
-];
+// Only create file logs in development
+if (process.env.NODE_ENV === "development") {
+  const logsDir = path.join(process.cwd(), "logs");
+  if (!fs.existsSync(logsDir)) {
+    fs.mkdirSync(logsDir, { recursive: true });
+  }
 
-// Create the logger
+  transports.push(
+    new winston.transports.File({
+      filename: path.join(logsDir, "error.log"),
+      level: "error",
+      format: fileFormat,
+    }),
+    new winston.transports.File({
+      filename: path.join(logsDir, "combined.log"),
+      format: fileFormat,
+    })
+  );
+}
+
+// Create logger
 const logger = winston.createLogger({
-  level: level(),
+  level: config.logging.level,
   levels,
-  format: fileFormat,
   transports,
   exitOnError: false,
 });
-
-// Create logs directory if it doesn't exist
-import fs from "fs";
-const logsDir = path.join(process.cwd(), "logs");
-if (!fs.existsSync(logsDir)) {
-  fs.mkdirSync(logsDir, { recursive: true });
-}
 
 export default logger;
