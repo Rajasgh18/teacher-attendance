@@ -61,7 +61,7 @@ export default function ViewSubject() {
         }
       } catch (e) {
         setError(
-          e instanceof Error ? e.message : "Failed to load subject data."
+          e instanceof Error ? e.message : "Failed to load subject data.",
         );
       } finally {
         setLoading(false);
@@ -92,7 +92,9 @@ export default function ViewSubject() {
   if (!subject) {
     return (
       <main className="p-6">
-        <div className="rounded-md border p-4 text-sm">No subject data found.</div>
+        <div className="rounded-md border p-4 text-sm">
+          No subject data found.
+        </div>
       </main>
     );
   }
@@ -184,13 +186,13 @@ export default function ViewSubject() {
             ) : (
               <div className="space-y-2">
                 {recentMarks.map((mark) => (
-                  <div
-                    key={mark.id}
-                    className="rounded-md border p-3 text-sm"
-                  >
+                  <div key={mark.id} className="rounded-md border p-3 text-sm">
                     <div className="flex items-center justify-between">
                       <div>
-                        <Link to={`/students/${mark.studentId}`} className="font-medium text-primary hover:underline">
+                        <Link
+                          to={`/students/${mark.studentId}`}
+                          className="font-medium text-primary hover:underline"
+                        >
                           {mark.student.firstName} {mark.student.lastName}
                         </Link>
                         <div className="text-xs text-muted-foreground mt-1">

@@ -111,7 +111,9 @@ export function useDashboardData() {
           // Include all data for charts
           allClasses: classesAllResult.data,
           allStudents: studentsAllResult.data,
-          allTeachers: teachersAllResult.data.filter((t) => t.role === "teacher"),
+          allTeachers: teachersAllResult.data.filter(
+            (t) => t.role === "teacher",
+          ),
           allSubjects: subjectsAllResult.data,
         });
       } catch (caughtError) {

@@ -60,12 +60,14 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-      {extendedItems.map(item => (
+      {extendedItems.map((item) => (
         <Card key={item.label} className="py-3 rounded-lg">
           <CardContent className="px-4 flex items-center justify-between">
             <div>
-            <h4 className="text-lg font-semibold">{item.label}</h4>
-            <p className="text-sm text-muted-foreground">{item.description}</p>
+              <h4 className="text-lg font-semibold">{item.label}</h4>
+              <p className="text-sm text-muted-foreground">
+                {item.description}
+              </p>
             </div>
             <h2 className="text-2xl font-bold">{item.value}</h2>
           </CardContent>
@@ -87,4 +89,3 @@ export function SummaryCards({ summary }: SummaryCardsProps) {
     </div>
   );
 }
-

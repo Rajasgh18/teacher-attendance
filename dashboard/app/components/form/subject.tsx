@@ -44,7 +44,7 @@ export function SubjectForm({ subject, onSuccess }: SubjectFormProps) {
   });
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -64,7 +64,10 @@ export function SubjectForm({ subject, onSuccess }: SubjectFormProps) {
         const updateData: UpdateSubjectData = {
           name: formData.name || undefined,
           code: formData.code || undefined,
-          description: formData.description && formData.description.trim() ? formData.description.trim() : null,
+          description:
+            formData.description && formData.description.trim()
+              ? formData.description.trim()
+              : null,
           isActive: formData.isActive,
         };
         await subjectService.update(subject.id, updateData);
@@ -119,9 +122,7 @@ export function SubjectForm({ subject, onSuccess }: SubjectFormProps) {
                     required
                     disabled={loading}
                   />
-                  <FieldDescription>
-                    Full name of the subject
-                  </FieldDescription>
+                  <FieldDescription>Full name of the subject</FieldDescription>
                 </FieldContent>
               </Field>
 
@@ -216,4 +217,3 @@ export function SubjectForm({ subject, onSuccess }: SubjectFormProps) {
     </form>
   );
 }
-

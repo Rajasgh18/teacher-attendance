@@ -9,7 +9,6 @@ export interface SchoolFilters {
   schoolId?: string;
 }
 
-
 class SchoolService extends ApiClient {
   list(params?: SchoolFilters) {
     return this.get<PaginatedResult<SchoolEntity>>("/schools", params);

@@ -89,10 +89,10 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
   useEffect(() => {
     if (user?.role === "admin") {
       schoolService
-        .list({limit: 10000000})
+        .list({ limit: 10000000 })
         .then((schoolsData) => {
           setSchools(schoolsData.data);
-          setLoading({...loading, school: false})
+          setLoading({ ...loading, school: false });
         })
         .catch((error) => setError(error))
         .finally(() => setLoading({ ...loading, school: false }));
@@ -104,7 +104,7 @@ export function StudentForm({ student, onSuccess }: StudentFormProps) {
   }, []);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({

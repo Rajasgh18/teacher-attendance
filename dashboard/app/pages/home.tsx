@@ -1,12 +1,7 @@
 import type { Route } from "./+types/home";
 import { SummaryCards } from "@/components/summary-cards";
 import { useDashboardData } from "@/hooks/useDashboardData";
-import {
-  BarChart,
-  PieChart,
-  LineChart,
-  AreaChart,
-} from "@/components/charts";
+import { BarChart, PieChart, LineChart, AreaChart } from "@/components/charts";
 import {
   getGradeDistribution,
   getGenderDistribution,
@@ -15,10 +10,7 @@ import {
   getStudentsPerClass,
   getEntityTimelineAll,
 } from "@/utils/chartData";
-import {
-  getChartColor,
-  getChartColors,
-} from "@/utils/chartColors";
+import { getChartColor, getChartColors } from "@/utils/chartColors";
 import { LucideLoader2 } from "lucide-react";
 
 export function meta({}: Route.MetaArgs) {
@@ -31,13 +23,13 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const { data, error, isLoading } = useDashboardData();
 
-  if(isLoading) 
+  if (isLoading)
     return (
       <div className="h-[calc(100vh-3.5rem)] w-full flex items-center justify-center">
-      <LucideLoader2 className="animate-spin size-6" />
-  </div>
-  )
-  
+        <LucideLoader2 className="animate-spin size-6" />
+      </div>
+    );
+
   return (
     <main className="p-4">
       <div className="space-y-6">

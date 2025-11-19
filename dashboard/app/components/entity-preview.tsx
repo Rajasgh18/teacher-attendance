@@ -51,11 +51,11 @@ export function EntityPreview<TItem>({
       </CardHeader>
       <CardContent className="space-y-3">
         {items.length === 0
-          ? emptyState ?? (
+          ? (emptyState ?? (
               <p className="text-sm text-muted-foreground">
                 Nothing to display yet.
               </p>
-            )
+            ))
           : items.map((item, index) => (
               <div key={index} className="rounded-md border p-3">
                 {renderItem(item, index)}
@@ -75,4 +75,3 @@ export function EntityPreview<TItem>({
     </Card>
   );
 }
-

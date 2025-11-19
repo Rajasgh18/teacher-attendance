@@ -58,13 +58,13 @@ export default function AttendanceView() {
         setLoading(true);
         const data = await attendanceService.getByAttendanceId(
           id,
-          tab as "teacher" | "student"
+          tab as "teacher" | "student",
         );
 
         setAttendanceEntity(data);
       } catch (e) {
         setError(
-          e instanceof Error ? e.message : "Failed to load attendance data."
+          e instanceof Error ? e.message : "Failed to load attendance data.",
         );
       } finally {
         setLoading(false);

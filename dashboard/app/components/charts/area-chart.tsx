@@ -5,9 +5,19 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import type { ChartDataPoint } from "@/utils/chartData";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 interface AreaChartProps {
   title: string;
@@ -50,9 +60,18 @@ export function AreaChart({
       </CardHeader>
       <CardContent>
         <ChartContainer config={{}} className="w-full h-[300px]">
-          <RechartsAreaChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+          <RechartsAreaChart
+            data={data}
+            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+          >
             <defs>
-              <linearGradient id={`color${dataKey}`} x1="0" y1="0" x2="0" y2="1">
+              <linearGradient
+                id={`color${dataKey}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
                 <stop offset="5%" stopColor={color} stopOpacity={0.8} />
                 <stop offset="95%" stopColor={color} stopOpacity={0.1} />
               </linearGradient>
@@ -80,4 +99,3 @@ export function AreaChart({
     </Card>
   );
 }
-

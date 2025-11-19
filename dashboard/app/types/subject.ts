@@ -7,4 +7,3 @@ export interface SubjectEntity {
   createdAt: string;
   updatedAt: string;
 }
-

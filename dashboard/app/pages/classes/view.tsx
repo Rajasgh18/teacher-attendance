@@ -90,7 +90,9 @@ export default function ClassView() {
   if (!classEntity) {
     return (
       <main className="p-6">
-        <div className="rounded-md border p-4 text-sm">No class data found.</div>
+        <div className="rounded-md border p-4 text-sm">
+          No class data found.
+        </div>
       </main>
     );
   }
@@ -150,7 +152,9 @@ export default function ClassView() {
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <span className="font-medium">Status:</span>
-                <StatusCell status={classEntity.isActive ? "active" : "inactive"} />
+                <StatusCell
+                  status={classEntity.isActive ? "active" : "inactive"}
+                />
               </div>
             </div>
           </CardContent>

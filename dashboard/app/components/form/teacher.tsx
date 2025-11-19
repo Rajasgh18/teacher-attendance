@@ -80,11 +80,10 @@ export function TeacherForm({ teacher, onSuccess }: TeacherFormProps) {
     } else {
       setLoading((prev) => ({ ...prev, school: false }));
     }
-
   }, [user]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -165,7 +164,9 @@ export function TeacherForm({ teacher, onSuccess }: TeacherFormProps) {
                 <FieldContent>
                   <Select
                     value={formData.schoolId || undefined}
-                    onValueChange={(value) => handleSelectChange("schoolId", value)}
+                    onValueChange={(value) =>
+                      handleSelectChange("schoolId", value)
+                    }
                     disabled={loading.form || !!user?.schoolId}
                     required
                   >
@@ -442,4 +443,3 @@ export function TeacherForm({ teacher, onSuccess }: TeacherFormProps) {
     </form>
   );
 }
-

@@ -144,7 +144,7 @@ export default function AttendanceRoute() {
 
   const toggleSelectAll = () => {
     if (!isStudentTab) return;
-    console.log("hello")
+    console.log("hello");
     if (selectedIds.length === attendanceList.length) {
       setSelectedIds([]);
     } else {
@@ -271,9 +271,7 @@ export default function AttendanceRoute() {
                 attendanceList.map((att) => (
                   <tr key={att.id} className="h-8 border-b">
                     {isStudentTab && "studentId" in att && (
-                      <td
-                        className="px-3 text-center"
-                      >
+                      <td className="px-3 text-center">
                         <Checkbox
                           className="size-4"
                           checked={selectedIds.includes(att.id)}

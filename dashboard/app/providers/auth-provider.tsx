@@ -9,11 +9,7 @@ import {
 
 import { authStorage } from "@/lib/auth-storage";
 import { authService } from "@/services/auth-service";
-import type {
-  AuthTokens,
-  AuthUser,
-  LoginPayload,
-} from "@/types/auth";
+import type { AuthTokens, AuthUser, LoginPayload } from "@/types/auth";
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -69,9 +65,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (payload: LoginPayload) => {
-    const { user: authenticatedUser, tokens } = await authService.login(
-      payload
-    );
+    const { user: authenticatedUser, tokens } =
+      await authService.login(payload);
 
     authStorage.setTokens(tokens.accessToken, tokens.refreshToken);
     setUser(authenticatedUser);
@@ -120,7 +115,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       refreshTokens,
       setUser,
     }),
-    [isLoading, isRefreshing, login, logout, refreshTokens, user]
+    [isLoading, isRefreshing, login, logout, refreshTokens, user],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
@@ -134,4 +129,3 @@ export function useAuth() {
 
   return context;
 }
-

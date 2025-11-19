@@ -1,12 +1,17 @@
+import { PieChart as RechartsPieChart, Pie, Cell, Legend } from "recharts";
 import {
-  PieChart as RechartsPieChart,
-  Pie,
-  Cell,
-  Legend,
-} from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import type { ChartDataPoint } from "@/utils/chartData";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 import { CHART_COLORS } from "@/utils/chartColors";
 
 interface PieChartProps {
@@ -45,14 +50,16 @@ export function PieChart({
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
-      <ChartContainer config={{}} className="w-full h-[300px]">
+        <ChartContainer config={{}} className="w-full h-[300px]">
           <RechartsPieChart>
             <Pie
               data={data}
-                cx="50%"
-                cy="50%"
+              cx="50%"
+              cy="50%"
               labelLine={false}
-              label={({ name, percent }) => `${name}: ${((percent || 0) * 100).toFixed(0)}%`}
+              label={({ name, percent }) =>
+                `${name}: ${((percent || 0) * 100).toFixed(0)}%`
+              }
               outerRadius={80}
               fill="#8884d8"
               dataKey="value"
@@ -63,16 +70,12 @@ export function PieChart({
                   fill={CHART_COLORS[index % CHART_COLORS.length]}
                 />
               ))}
-            <ChartTooltip content={<ChartTooltipContent />} />
-            <Legend
-              wrapperStyle={{ fontSize: "12px" }}
-              iconType="circle"
-            />
-          </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend wrapperStyle={{ fontSize: "12px" }} iconType="circle" />
+            </Pie>
           </RechartsPieChart>
         </ChartContainer>
       </CardContent>
     </Card>
   );
 }
-

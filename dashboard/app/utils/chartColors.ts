@@ -25,4 +25,3 @@ export function getChartColor(index: number): string {
 export function getChartColors(count: number): string[] {
   return Array.from({ length: count }, (_, i) => getChartColor(i));
 }
-

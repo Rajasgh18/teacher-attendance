@@ -83,7 +83,7 @@ export function ClassForm({ classEntity, onSuccess }: ClassFormProps) {
   }, [user]);
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -159,7 +159,9 @@ export function ClassForm({ classEntity, onSuccess }: ClassFormProps) {
                 <FieldContent>
                   <Select
                     value={formData.schoolId || undefined}
-                    onValueChange={(value) => handleSelectChange("schoolId", value)}
+                    onValueChange={(value) =>
+                      handleSelectChange("schoolId", value)
+                    }
                     disabled={loading.form || !!user?.schoolId}
                     required
                   >

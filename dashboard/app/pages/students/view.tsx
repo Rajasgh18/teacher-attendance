@@ -65,24 +65,24 @@ export default function ViewStudent() {
         // Fetch related data
         try {
           const [marksData, attendanceData] = await Promise.all([
-            marksService.list({ page: 1, limit: 5, studentId: id }).catch(() => ({
-              data: [],
-              pagination: { total: 0 },
-            })),
+            marksService
+              .list({ page: 1, limit: 5, studentId: id })
+              .catch(() => ({
+                data: [],
+                pagination: { total: 0 },
+              })),
             attendanceService
               .listStudent({ page: 1, limit: 5 })
               .catch(() => ({ data: [], pagination: { total: 0 } })),
           ]);
-          
+
           // Filter marks for this student
-          const studentMarks = marksData.data.filter(
-            (m) => m.studentId === id
-          );
+          const studentMarks = marksData.data.filter((m) => m.studentId === id);
           setRecentMarks(studentMarks);
 
           // Filter attendance for this student
           const studentAttendance = attendanceData.data.filter(
-            (a) => a.studentId === id
+            (a) => a.studentId === id,
           );
           setRecentAttendance(studentAttendance);
         } catch (e) {
@@ -90,7 +90,7 @@ export default function ViewStudent() {
         }
       } catch (e) {
         setError(
-          e instanceof Error ? e.message : "Failed to load student data."
+          e instanceof Error ? e.message : "Failed to load student data.",
         );
       } finally {
         setLoading(false);
@@ -121,7 +121,9 @@ export default function ViewStudent() {
   if (!student) {
     return (
       <main className="p-6">
-        <div className="rounded-md border p-4 text-sm">No student data found.</div>
+        <div className="rounded-md border p-4 text-sm">
+          No student data found.
+        </div>
       </main>
     );
   }
@@ -255,10 +257,7 @@ export default function ViewStudent() {
             ) : (
               <div className="space-y-2">
                 {recentMarks.map((mark) => (
-                  <div
-                    key={mark.id}
-                    className="rounded-md border p-3 text-sm"
-                  >
+                  <div key={mark.id} className="rounded-md border p-3 text-sm">
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="font-medium">{mark.subject.name}</div>
@@ -280,9 +279,7 @@ export default function ViewStudent() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Recent Attendance</CardTitle>
-                <CardDescription>
-                  Latest attendance records
-                </CardDescription>
+                <CardDescription>Latest attendance records</CardDescription>
               </div>
               {recentAttendance.length > 0 && (
                 <Link
@@ -302,16 +299,11 @@ export default function ViewStudent() {
             ) : (
               <div className="space-y-2">
                 {recentAttendance.map((att) => (
-                  <div
-                    key={att.id}
-                    className="rounded-md border p-3 text-sm"
-                  >
+                  <div key={att.id} className="rounded-md border p-3 text-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Clock className="size-4 text-muted-foreground" />
-                        <span>
-                          {new Date(att.date).toLocaleDateString()}
-                        </span>
+                        <span>{new Date(att.date).toLocaleDateString()}</span>
                       </div>
                       <StatusCell status={att.status} />
                     </div>

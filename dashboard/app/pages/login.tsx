@@ -40,13 +40,15 @@ export default function LoginPage() {
         navigate(redirectTo, { replace: true });
       } catch (error) {
         const message =
-          error instanceof Error ? error.message : "Failed to login. Try again.";
+          error instanceof Error
+            ? error.message
+            : "Failed to login. Try again.";
         setFormError(message);
       } finally {
         setIsSubmitting(false);
       }
     },
-    [employeeId, password, login, navigate, redirectTo]
+    [employeeId, password, login, navigate, redirectTo],
   );
 
   if (!isLoading && user) {
@@ -74,7 +76,7 @@ export default function LoginPage() {
                   placeholder="EMP-001"
                   autoComplete="username"
                   value={employeeId}
-                  onChange={event => setEmployeeId(event.target.value)}
+                  onChange={(event) => setEmployeeId(event.target.value)}
                   required
                 />
               </Field>
@@ -87,7 +89,7 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   autoComplete="current-password"
                   value={password}
-                  onChange={event => setPassword(event.target.value)}
+                  onChange={(event) => setPassword(event.target.value)}
                   required
                 />
               </Field>

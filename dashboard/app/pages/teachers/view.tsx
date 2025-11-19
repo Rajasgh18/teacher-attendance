@@ -65,10 +65,10 @@ export default function ViewTeacher() {
 
           // Filter attendance for this teacher
           const teacherAttendance = attendanceData.data.filter(
-            (a: any) => a.teacherId === id
+            (a: any) => a.teacherId === id,
           );
           setRecentAttendance(teacherAttendance.slice(0, 5));
-          
+
           // Note: Classes assignment data would need a separate endpoint
           // For now, we'll leave it empty or fetch from a different source
           setClasses([]);
@@ -76,7 +76,9 @@ export default function ViewTeacher() {
           console.error("Error fetching related data:", e);
         }
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load teacher data.");
+        setError(
+          e instanceof Error ? e.message : "Failed to load teacher data.",
+        );
       } finally {
         setLoading(false);
       }
@@ -106,7 +108,9 @@ export default function ViewTeacher() {
   if (!teacher) {
     return (
       <main className="p-6">
-        <div className="rounded-md border p-4 text-sm">No teacher data found.</div>
+        <div className="rounded-md border p-4 text-sm">
+          No teacher data found.
+        </div>
       </main>
     );
   }
@@ -180,9 +184,7 @@ export default function ViewTeacher() {
                 <div className="flex items-center gap-2 text-sm">
                   <Calendar className="size-4 text-muted-foreground" />
                   <span className="font-medium">Hire Date:</span>
-                  <span>
-                    {new Date(teacher.hireDate).toLocaleDateString()}
-                  </span>
+                  <span>{new Date(teacher.hireDate).toLocaleDateString()}</span>
                 </div>
               )}
               <div className="flex items-center gap-2 text-sm">
@@ -280,9 +282,7 @@ export default function ViewTeacher() {
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>Recent Attendance</CardTitle>
-                <CardDescription>
-                  Latest attendance records
-                </CardDescription>
+                <CardDescription>Latest attendance records</CardDescription>
               </div>
               {recentAttendance.length > 0 && (
                 <Link
@@ -302,10 +302,7 @@ export default function ViewTeacher() {
             ) : (
               <div className="space-y-2">
                 {recentAttendance.map((att: any) => (
-                  <div
-                    key={att.id}
-                    className="rounded-md border p-3 text-sm"
-                  >
+                  <div key={att.id} className="rounded-md border p-3 text-sm">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Clock className="size-4 text-muted-foreground" />

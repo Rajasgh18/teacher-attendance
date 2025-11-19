@@ -80,7 +80,9 @@ export default function MarksView() {
   if (!marksEntity) {
     return (
       <main className="p-6">
-        <div className="rounded-md border p-4 text-sm">No marks data found.</div>
+        <div className="rounded-md border p-4 text-sm">
+          No marks data found.
+        </div>
       </main>
     );
   }
@@ -88,11 +90,7 @@ export default function MarksView() {
   return (
     <main className="flex flex-col gap-y-6 h-full p-6">
       <div className="flex items-center gap-4">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => navigate("/marks")}
-        >
+        <Button variant="ghost" size="icon" onClick={() => navigate("/marks")}>
           <ArrowLeft className="size-4" />
         </Button>
         <div className="space-y-1">
@@ -117,8 +115,7 @@ export default function MarksView() {
                   to={`/students/${marksEntity.student.id}`}
                   className="text-primary hover:underline"
                 >
-                  {marksEntity.student.firstName}{" "}
-                  {marksEntity.student.lastName}
+                  {marksEntity.student.firstName} {marksEntity.student.lastName}
                 </Link>
               </div>
               {marksEntity.student.studentId && (
@@ -166,7 +163,9 @@ export default function MarksView() {
               <div className="flex items-center gap-2 text-sm">
                 <GraduationCap className="size-4 text-muted-foreground" />
                 <span className="font-medium">Marks:</span>
-                <span className="text-lg font-semibold">{marksEntity.marks}</span>
+                <span className="text-lg font-semibold">
+                  {marksEntity.marks}
+                </span>
               </div>
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="size-4 text-muted-foreground" />

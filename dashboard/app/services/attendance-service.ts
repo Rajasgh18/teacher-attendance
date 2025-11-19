@@ -10,19 +10,21 @@ class AttendanceService extends ApiClient {
   listTeacher(params?: AttendanceFilters) {
     return this.get<PaginatedResult<TeacherAttendanceEntity>>(
       "/attendance/teacher",
-      params
+      params,
     );
   }
   listStudent(params?: AttendanceFilters) {
     return this.get<PaginatedResult<StudentAttendanceEntity>>(
       "/attendance/student",
-      params
+      params,
     );
   }
 
   getByAttendanceId(id: string, type: "teacher" | "student") {
     if (type === "teacher")
-      return this.get<TeacherAttendanceEntity>(`/attendance/${id}?type=teacher`);
+      return this.get<TeacherAttendanceEntity>(
+        `/attendance/${id}?type=teacher`,
+      );
 
     return this.get<StudentAttendanceEntity>(`/attendance/${id}?type=student`);
   }

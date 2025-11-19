@@ -121,7 +121,7 @@ export class ApiClient {
       }
       // Network error or other fetch-related error
       const enhancedError = new Error(
-        error.message || "A network error occurred."
+        error.message || "A network error occurred.",
       );
       throw enhancedError;
     }
@@ -131,7 +131,7 @@ export class ApiClient {
   protected async get<T>(
     url: string,
     params?: Record<string, any>,
-    credentials?: "include" | "omit" | "same-origin"
+    credentials?: "include" | "omit" | "same-origin",
   ): Promise<T> {
     return this.request({
       method: "GET",
@@ -145,7 +145,7 @@ export class ApiClient {
   protected async post<T>(
     url: string,
     data?: any,
-    credentials?: "include" | "omit" | "same-origin"
+    credentials?: "include" | "omit" | "same-origin",
   ): Promise<T> {
     return this.request<T>({
       method: "POST",
@@ -159,7 +159,7 @@ export class ApiClient {
   protected async put<T>(
     url: string,
     data?: any,
-    credentials?: "include" | "omit" | "same-origin"
+    credentials?: "include" | "omit" | "same-origin",
   ): Promise<T> {
     return this.request<T>({
       method: "PUT",
@@ -173,7 +173,7 @@ export class ApiClient {
   protected async delete<T>(
     url: string,
     data?: any,
-    credentials?: "include" | "omit" | "same-origin"
+    credentials?: "include" | "omit" | "same-origin",
   ): Promise<T> {
     return this.request<T>({
       method: "DELETE",

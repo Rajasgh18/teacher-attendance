@@ -76,7 +76,7 @@ export default function ClassesRoute() {
           ...(search && { search }),
         });
         setTotalPages(list.pagination.totalPages);
-        setTotalCount(list.pagination.total)
+        setTotalCount(list.pagination.total);
         setClassesList(list.data);
         setSelectedIds([]);
       } catch (e) {

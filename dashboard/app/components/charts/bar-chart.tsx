@@ -5,9 +5,19 @@ import {
   YAxis,
   CartesianGrid,
 } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import type { ChartDataPoint } from "@/utils/chartData";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from "@/components/ui/chart";
 
 interface BarChartProps {
   title: string;
@@ -49,8 +59,11 @@ export function BarChart({
         {description && <CardDescription>{description}</CardDescription>}
       </CardHeader>
       <CardContent>
-      <ChartContainer config={{}} className="w-full h-[300px]">
-      <RechartsBarChart data={data} margin={{ top: 5, right: 30, left: 0, bottom: 5 }}>
+        <ChartContainer config={{}} className="w-full h-[300px]">
+          <RechartsBarChart
+            data={data}
+            margin={{ top: 5, right: 30, left: 0, bottom: 5 }}
+          >
             <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
             <XAxis
               dataKey="name"
@@ -72,4 +85,3 @@ export function BarChart({
     </Card>
   );
 }
-
