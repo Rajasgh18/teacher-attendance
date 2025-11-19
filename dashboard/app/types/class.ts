@@ -1,3 +1,5 @@
+import type { SchoolEntity } from "./school";
+
 export interface ClassEntity {
   id: string;
   schoolId: string;
@@ -8,6 +10,7 @@ export interface ClassEntity {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  school: SchoolEntity;
 }
 
 export interface ClassTeacherAssignment {
@@ -30,3 +33,31 @@ export interface ClassTeacherAssignment {
   };
 }
 
+export interface ClassFilters {
+  page?: number;
+  limit?: number;
+  search?: string;
+  schoolId?: string;
+}
+
+export interface ClassStudentsFilters {
+  classId?: string;
+  schoolId?: string;
+}
+
+export interface CreateClassData {
+  schoolId: string;
+  name: string;
+  grade: string;
+  section?: string;
+  academicYear: string;
+  isActive?: boolean;
+}
+
+export interface UpdateClassData {
+  name?: string;
+  grade?: string;
+  section?: string;
+  academicYear?: string;
+  isActive?: boolean;
+}

@@ -1,39 +1,14 @@
-import { ApiClient } from "@/lib/apiClient";
-import type { PaginatedResult } from "@/types/common";
 import type {
   ClassEntity,
+  ClassFilters,
+  CreateClassData,
+  UpdateClassData,
+  ClassStudentsFilters,
   ClassTeacherAssignment,
 } from "@/types/class";
+import { ApiClient } from "@/lib/apiClient";
 import type { StudentEntity } from "@/types/student";
-
-export interface ClassFilters {
-  page?: number;
-  limit?: number;
-  search?: string;
-  schoolId?: string;
-}
-
-export interface ClassStudentsFilters {
-  classId?: string;
-  schoolId?: string;
-}
-
-export interface CreateClassData {
-  schoolId: string;
-  name: string;
-  grade: string;
-  section?: string;
-  academicYear: string;
-  isActive?: boolean;
-}
-
-export interface UpdateClassData {
-  name?: string;
-  grade?: string;
-  section?: string;
-  academicYear?: string;
-  isActive?: boolean;
-}
+import type { PaginatedResult } from "@/types/common";
 
 class ClassService extends ApiClient {
   list(params?: ClassFilters) {
@@ -66,4 +41,3 @@ class ClassService extends ApiClient {
 }
 
 export const classService = new ClassService();
-

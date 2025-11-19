@@ -1,6 +1,6 @@
 import { ApiClient } from "@/lib/apiClient";
 import type { PaginatedResult } from "@/types/common";
-import type { AuthUser, UserRole } from "@/types/auth";
+import type { User, UserRole } from "@/types/auth";
 
 export interface UserFilters {
   page?: number;
@@ -48,23 +48,23 @@ export interface UpdateTeacherData {
 
 class UserService extends ApiClient {
   getAll(params?: UserFilters) {
-    return this.get<PaginatedResult<AuthUser>>("/user", params);
+    return this.get<PaginatedResult<User>>("/user", params);
   }
 
   getTeachers(params?: UserFilters) {
-    return this.get<PaginatedResult<AuthUser>>("/user/teachers", params);
+    return this.get<PaginatedResult<User>>("/user/teachers", params);
   }
 
   getById(id: string) {
-    return this.get<AuthUser>(`/user/${id}`);
+    return this.get<User>(`/user/${id}`);
   }
 
   create(data: CreateTeacherData) {
-    return this.post<AuthUser>("/user", data);
+    return this.post<User>("/user", data);
   }
 
   update(id: string, data: UpdateTeacherData) {
-    return this.put<AuthUser>(`/user/${id}`, data);
+    return this.put<User>(`/user/${id}`, data);
   }
 
   deleteUser(id: string) {
@@ -77,4 +77,3 @@ class UserService extends ApiClient {
 }
 
 export const userService = new UserService();
-

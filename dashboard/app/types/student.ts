@@ -1,3 +1,6 @@
+import type { ClassEntity } from "./class";
+import type { SchoolEntity } from "./school";
+
 export interface StudentEntity {
   id: string;
   schoolId: string;
@@ -13,5 +16,6 @@ export interface StudentEntity {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
+  class: ClassEntity;
+  school: SchoolEntity;
 }
-

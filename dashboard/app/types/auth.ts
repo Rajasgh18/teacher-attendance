@@ -8,7 +8,7 @@ export interface SchoolSummary {
   city?: string;
 }
 
-export interface AuthUser {
+export interface User {
   id: string;
   email: string;
   employeeId: string;
@@ -37,7 +37,7 @@ export interface LoginPayload {
 }
 
 export interface LoginResponse {
-  user: AuthUser;
+  user: User;
   tokens: AuthTokens;
 }
 
@@ -46,6 +46,5 @@ export interface RefreshResponse {
 }
 
 export interface ProfileResponse {
-  user: AuthUser;
+  user: User;
 }
-

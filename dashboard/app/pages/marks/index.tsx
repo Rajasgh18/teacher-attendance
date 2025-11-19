@@ -1,5 +1,8 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { marksService } from "@/services/marks-service";
 import {
-  SearchIcon,
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
@@ -7,34 +10,30 @@ import {
   LucideEye,
   LucidePencil,
   LucideTrash,
+  SearchIcon,
 } from "lucide-react";
-import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router";
-
+import type { MarksEntity } from "@/types/marks";
+import { Loader } from "@/components/loader";
 import {
   DropdownMenu,
+  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-  DropdownMenuContent,
 } from "@/components/ui/dropdown-menu";
-import { Loader } from "@/components/loader";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import type { StudentEntity } from "@/types/student";
-import { studentService } from "@/services/student-service";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export default function StudentsRoute() {
+export default function MarksRoute() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const page = Number(searchParams.get("page") ?? 1);
   const limit = Number(searchParams.get("limit") ?? 20);
   const searchQuery = searchParams.get("search") || "";
-  const classId = searchParams.get("classId") || "";
+  const studentId = searchParams.get("studentId") || "";
 
   const [searchValue, setSearchValue] = useState(searchQuery);
-  const [studentsList, setStudentsList] = useState<StudentEntity[]>([]);
+  const [marksList, setMarksList] = useState<MarksEntity[]>([]);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
@@ -66,27 +65,29 @@ export default function StudentsRoute() {
     async function fetchData() {
       try {
         setLoading(true);
+        setError(null);
+        setMarksList([]);
         const search =
           searchQuery && searchQuery.trim() ? searchQuery.trim() : undefined;
-        const list = await studentService.list({
+        const list = await marksService.list({
           page,
           limit,
-          classId,
+          studentId,
           ...(search && { search }),
         });
         setTotalPages(list.pagination.totalPages);
-        setStudentsList(list.data);
         setTotalCount(list.pagination.total);
+        setMarksList(list.data);
         setSelectedIds([]);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Failed to load students.");
+        setError(e instanceof Error ? e.message : "Failed to load marks.");
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [page, limit, searchQuery, classId, refreshKey]);
+  }, [page, limit, searchQuery, studentId, refreshKey]);
 
   const handlePageChange = (newPage: number) => {
     const params = new URLSearchParams(searchParams);
@@ -112,51 +113,48 @@ export default function StudentsRoute() {
   };
 
   const toggleSelectAll = () => {
-    if (selectedIds.length === studentsList.length) {
+    if (selectedIds.length === marksList.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(studentsList.map((student) => student.id));
+      setSelectedIds(marksList.map((mark) => mark.id));
     }
   };
 
-  const deleteStudents = async (ids: string[]) => {
+  const deleteMarks = async (ids: string[]) => {
     if (ids.length === 0) return;
     const confirmation = window.confirm(
-      `Delete ${ids.length} student${ids.length > 1 ? "s" : ""}?`,
+      `Delete ${ids.length} mark${ids.length > 1 ? "s" : ""}?`,
     );
     if (!confirmation) return;
 
     try {
       setDeleting(true);
-      await Promise.all(ids.map((id) => studentService.deleteStudent(id)));
+      await Promise.all(ids.map((id) => marksService.deleteMark(id)));
       setSelectedIds([]);
       setRefreshKey((prev) => prev + 1);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to delete students.");
+      setError(e instanceof Error ? e.message : "Failed to delete marks.");
     } finally {
       setDeleting(false);
     }
   };
 
   const handleDeleteSelected = () => {
-    deleteStudents(selectedIds);
+    deleteMarks(selectedIds);
   };
 
   const handleDeleteSingle = (id: string) => {
-    deleteStudents([id]);
+    deleteMarks([id]);
   };
 
   const isAllSelected =
-    studentsList.length > 0 && selectedIds.length === studentsList.length;
+    marksList.length > 0 && selectedIds.length === marksList.length;
 
   return (
     <main className="flex flex-col gap-y-4 h-full p-6">
       <div className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Students</h1>
-        <p className="text-sm text-muted-foreground">
-          Manage students across schools. Build out filtering, pagination and
-          CRUD workflows here.
-        </p>
+        <h1 className="text-2xl font-semibold tracking-tight">Marks</h1>
+        <p className="text-sm text-muted-foreground">Manage student marks.</p>
       </div>
 
       <div className="flex items-center justify-between gap-4">
@@ -164,7 +162,7 @@ export default function StudentsRoute() {
           <SearchIcon className="absolute left-2.5 size-4 text-muted-foreground" />
           <Input
             className="pl-8 w-60"
-            placeholder="Search for students"
+            placeholder="Search for marks"
             value={searchValue}
             onChange={handleSearchChange}
           />
@@ -177,7 +175,7 @@ export default function StudentsRoute() {
           >
             {deleting ? "Deleting..." : "Delete Selected"}
           </Button>
-          <Button onClick={() => navigate("/students/new")}>Add Student</Button>
+          <Button onClick={() => navigate("/marks/new")}>Add Marks</Button>
         </div>
       </div>
 
@@ -191,43 +189,39 @@ export default function StudentsRoute() {
                     className="size-4"
                     checked={isAllSelected}
                     onCheckedChange={toggleSelectAll}
-                    aria-label="Select all students"
+                    aria-label="Select all marks"
                   />
                 </th>
-                <th className="text-start px-3">Student ID</th>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Class</th>
-                <th>School</th>
+                <th>Student Name</th>
+                <th>Subject</th>
+                <th>Marks</th>
+                <th>Month</th>
                 <th className="w-32">Action</th>
               </tr>
             </thead>
             <tbody className="text-sm">
               {!loading &&
-                studentsList.length > 0 &&
-                studentsList.map((s: StudentEntity) => (
-                  <tr key={s.id} className="h-8 border-b">
+                marksList.length > 0 &&
+                marksList.map((m: MarksEntity) => (
+                  <tr key={m.id} className="h-8 border-b">
                     <td
                       className="px-3 text-center"
                       onClick={(event) => event.stopPropagation()}
                     >
                       <Checkbox
                         className="size-4"
-                        checked={selectedIds.includes(s.id)}
-                        onCheckedChange={() => toggleSelect(s.id)}
-                        aria-label={`Select student ${s.firstName}`}
+                        checked={selectedIds.includes(m.id)}
+                        onCheckedChange={() => toggleSelect(m.id)}
+                        aria-label={`Select marks ${m.id}`}
                       />
                     </td>
-                    <td className="px-3">{s.studentId || "-"}</td>
-                    <td>
-                      {s.firstName} {s.lastName}
-                    </td>
-                    <td>{s.email || "-"}</td>
-                    <td>{s.class.name}</td>
-                    <td>{s.school.name}</td>
+                    <td>{m.student.firstName}</td>
+                    <td>{m.subject.name}</td>
+                    <td>{m.marks}</td>
+                    <td>{m.month}</td>
                     <td className="space-x-1">
                       <Button
-                        onClick={() => navigate(`/students/${s.id}`)}
+                        onClick={() => navigate(`/marks/${m.id}`)}
                         variant="ghost"
                         size="icon-sm"
                         className="size-6"
@@ -235,18 +229,10 @@ export default function StudentsRoute() {
                         <LucideEye className="size-3.5" />
                       </Button>
                       <Button
-                        onClick={() => navigate(`/students/${s.id}/edit`)}
                         variant="ghost"
                         size="icon-sm"
                         className="size-6"
-                      >
-                        <LucidePencil className="size-3.5" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        className="size-6"
-                        onClick={() => handleDeleteSingle(s.id)}
+                        onClick={() => handleDeleteSingle(m.id)}
                         disabled={deleting}
                       >
                         <LucideTrash className="size-3.5" />
@@ -256,11 +242,11 @@ export default function StudentsRoute() {
                 ))}
             </tbody>
           </table>
-          {studentsList.length === 0 && (
+          {marksList.length === 0 && (
             <div className="basis-1 flex-1 w-full flex justify-center items-center">
               {loading && <Loader />}
               {error && <p className="text-destructive">{error}</p>}
-              {!loading && !error && <p>No students found</p>}
+              {!loading && !error && <p>No marks found</p>}
             </div>
           )}
         </div>

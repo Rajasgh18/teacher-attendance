@@ -1,10 +1,16 @@
-import { NavLink, Outlet } from "react-router";
+import { NavLink, Outlet, useNavigation } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/auth-provider";
 import { Navigate } from "react-router";
-import { LucideLogOut, LucideMoon, LucideSun, LucideUser2 } from "lucide-react";
+import {
+  LucideLoader2,
+  LucideLogOut,
+  LucideMoon,
+  LucideSun,
+  LucideUser2,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -31,16 +37,33 @@ const NAVIGATION_ITEMS = [
     to: "/subjects",
     roles: ["admin", "principal"] as const,
   },
+  {
+    label: "Attendance",
+    to: "/attendance",
+    roles: ["admin", "principal"] as const,
+  },
+  {
+    label: "Marks",
+    to: "/marks",
+    roles: ["admin", "principal"] as const,
+  },
 ];
 
 export default function AppShell() {
   const { user, isLoading: isAuthLoading, logout } = useAuth();
   const { theme, setTheme } = useTheme();
+  const navigation = useNavigation();
+  // const isNavigating = Boolean(navigation.location);
 
   if (isAuthLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
-        <p className="text-sm text-muted-foreground">Loading your session...</p>
+      <div className="flex h-screen items-center justify-center">
+        <section className="flex flex-col items-center space-y-2">
+          <LucideLoader2 className="animate-spin size-6" />
+          <p className="text-sm text-muted-foreground">
+            Loading your session...
+          </p>
+        </section>
       </div>
     );
   }
@@ -79,7 +102,7 @@ export default function AppShell() {
                   "rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   isActive
                     ? "bg-primary text-primary-foreground"
-                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground",
                 )
               }
               end={item.to === "/"}
@@ -102,7 +125,7 @@ export default function AppShell() {
         </div>
       </aside>
       <div className="flex flex-1 flex-col">
-        <header className="border-b bg-background sticky top-0">
+        <header className="border-b bg-background sticky top-0 z-10">
           <div className="flex items-center justify-between px-4 py-2 md:px-8">
             <div>
               <p className="text-lg font-semibold text-foreground">
