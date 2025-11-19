@@ -39,66 +39,108 @@ export class AttendanceService {
     const whereClause =
       whereConditions.length > 0 ? and(...whereConditions) : undefined;
 
-    const result = await db
-      .select({
-        id: studentAttendance.id,
-        studentId: studentAttendance.studentId,
-        classId: studentAttendance.classId,
-        date: studentAttendance.date,
-        status: studentAttendance.status,
-        notes: studentAttendance.notes,
-        markedBy: studentAttendance.markedBy,
-        createdAt: studentAttendance.createdAt,
-        updatedAt: studentAttendance.updatedAt,
-        student: {
-          id: students.id,
-          studentId: students.studentId,
-          firstName: students.firstName,
-          lastName: students.lastName,
-          email: students.email,
-        },
-        class: {
-          id: classes.id,
-          name: classes.name,
-          grade: classes.grade,
-          section: classes.section,
-        },
-        markedByUser: {
-          id: users.id,
-          firstName: users.firstName,
-          lastName: users.lastName,
-          email: users.email,
-        },
-      })
-      .from(studentAttendance)
-      .leftJoin(students, eq(studentAttendance.studentId, students.id))
-      .leftJoin(classes, eq(studentAttendance.classId, classes.id))
-      .leftJoin(users, eq(studentAttendance.markedBy, users.id))
-      .where(whereClause)
-      .orderBy(desc(studentAttendance.date), asc(studentAttendance.createdAt))
-      .limit(limit)
-      .offset(offset);
-
-    // Get total count for pagination
-    const totalResult = await db
-      .select({ count: db.$count(studentAttendance.id) })
-      .from(studentAttendance)
-      .where(whereClause);
-
-    const total = Number(totalResult[0]?.count || 0);
+    const [data, totalCount] = await Promise.all([
+      db
+        .select({
+          id: studentAttendance.id,
+          studentId: studentAttendance.studentId,
+          classId: studentAttendance.classId,
+          date: studentAttendance.date,
+          status: studentAttendance.status,
+          notes: studentAttendance.notes,
+          markedBy: studentAttendance.markedBy,
+          createdAt: studentAttendance.createdAt,
+          updatedAt: studentAttendance.updatedAt,
+          student: {
+            id: students.id,
+            studentId: students.studentId,
+            firstName: students.firstName,
+            lastName: students.lastName,
+            email: students.email,
+          },
+          class: {
+            id: classes.id,
+            name: classes.name,
+            grade: classes.grade,
+            section: classes.section,
+          },
+          markedByUser: {
+            id: users.id,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            email: users.email,
+          },
+        })
+        .from(studentAttendance)
+        .leftJoin(students, eq(studentAttendance.studentId, students.id))
+        .leftJoin(classes, eq(studentAttendance.classId, classes.id))
+        .leftJoin(users, eq(studentAttendance.markedBy, users.id))
+        .where(whereClause)
+        .orderBy(desc(studentAttendance.date), asc(studentAttendance.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: studentAttendance.id })
+        .from(studentAttendance)
+        .where(whereClause)
+        .then(result => result.length),
+    ]);
 
     return {
-      data: result,
+      data,
       pagination: {
         page,
         limit,
-        total,
-        totalPages: Math.ceil(total / limit),
+        totalCount,
+        totalPages: Math.ceil(totalCount / limit),
       },
     };
   }
 
-  // Get student attendance by ID
+  static async getTeacherAttendanceById(id: string) {
+    const result = await db
+      .select({
+        id: teacherAttendance.id,
+        teacherId: teacherAttendance.teacherId,
+        latitude: teacherAttendance.latitude,
+        longitude: teacherAttendance.longitude,
+        checkIn: teacherAttendance.checkIn,
+        status: teacherAttendance.status,
+        notes: teacherAttendance.notes,
+        createdAt: teacherAttendance.createdAt,
+        updatedAt: teacherAttendance.updatedAt,
+        teacher: {
+          id: users.id,
+          schoolId: users.schoolId,
+          email: users.email,
+          role: users.role,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          employeeId: users.employeeId,
+          department: users.department,
+          phone: users.phone,
+          address: users.address,
+          hireData: users.hireDate,
+          isActive: users.isActive,
+        }
+      })
+      .from(teacherAttendance)
+      .leftJoin(users, eq(teacherAttendance.teacherId, users.id))
+      .where(eq(teacherAttendance.id, id));
+
+    result.map(attendance => ({
+      ...attendance,
+      checkIn: attendance.checkIn.getTime(),
+    }));
+
+    if(result[0]){
+      return result[0]
+    }
+    
+    return []
+  }
+
+    // Get student attendance by ID
   static async getStudentAttendanceById(id: string) {
     const result = await db
       .select({
@@ -243,10 +285,23 @@ export class AttendanceService {
           lastName: users.lastName,
           email: users.email,
         },
+        student: {
+          id: students.id,
+          schoolId: students.schoolId,
+          firstName: students.firstName,
+          lastName: students.lastName,
+          email: students.email,
+          phone: students.phone,
+          address: students.address,
+          dateOfBirth: students.dateOfBirth,
+          gender: students.gender,
+          isActive: students.isActive
+        }
       })
       .from(studentAttendance)
       .leftJoin(classes, eq(studentAttendance.classId, classes.id))
       .leftJoin(users, eq(studentAttendance.markedBy, users.id))
+      .leftJoin(students, eq(studentAttendance.studentId, students.id))
       .where(whereClause)
       .orderBy(desc(studentAttendance.date));
 
@@ -326,8 +381,8 @@ export class AttendanceService {
       try {
         // Convert number timestamp to date string (YYYY-MM-DD format)
         const dateObj = new Date(attendance.date || Date.now());
-        const dateString = dateObj.toISOString().split('T')[0];
-        
+        const dateString = dateObj.toISOString().split("T")[0];
+
         // The attendance.studentId is already the database ID, so we can use it directly
         // Just verify the student exists in the database
         const student = await db
@@ -335,21 +390,26 @@ export class AttendanceService {
           .from(students)
           .where(eq(students.id, attendance.studentId))
           .limit(1);
-        
+
         if (student.length === 0) {
-          console.error(`Student not found with database ID: ${attendance.studentId}`);
+          console.error(
+            `Student not found with database ID: ${attendance.studentId}`
+          );
           continue;
         }
-        
+
         const processedAttendance = {
           ...attendance,
           studentId: attendance.studentId, // Already the correct database ID
           date: dateString,
         } as NewStudentAttendance;
-        
+
         await this.createStudentAttendance(processedAttendance);
       } catch (error) {
-        console.error(`Error processing attendance for student ${attendance.studentId}:`, error);
+        console.error(
+          `Error processing attendance for student ${attendance.studentId}:`,
+          error
+        );
       }
     }
   }
@@ -389,15 +449,57 @@ export class AttendanceService {
 
     const whereClause = and(...whereConditions);
 
-    const result = await db
-      .select()
-      .from(teacherAttendance)
-      .where(whereClause)
-      .orderBy(asc(teacherAttendance.createdAt))
-      .limit(limit)
-      .offset(offset);
+    const [data, totalCount] = await Promise.all([
+      db
+        .select({
+          id: teacherAttendance.id,
+          teacherId: teacherAttendance.teacherId,
+          latitude: teacherAttendance.latitude,
+          longitude: teacherAttendance.longitude,
+          checkIn: teacherAttendance.checkIn,
+          status: teacherAttendance.status,
+          notes: teacherAttendance.notes,
+          createdAt: teacherAttendance.createdAt,
+          updatedAt: teacherAttendance.updatedAt,
+          teacher: {
+            id: users.id,
+            email: users.email,
+            firstName: users.firstName,
+            lastName: users.lastName,
+            role: users.role,
+            employeeId: users.employeeId,
+            department: users.department,
+            schoolId: users.schoolId,
+            phone: users.phone,
+            address: users.address,
+            hireDate: users.hireDate,
+            isActive: users.isActive,
+            createdAt: users.createdAt,
+            updatedAt: users.updatedAt,
+          },
+        })
+        .from(teacherAttendance)
+        .leftJoin(users, eq(teacherAttendance.teacherId, users.id))
+        .where(whereClause)
+        .orderBy(asc(teacherAttendance.createdAt))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: teacherAttendance.id })
+        .from(teacherAttendance)
+        .where(whereClause)
+        .then(result => result.length),
+    ]);
 
-    return result;
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    };
   }
 
   // Create teacher attendance record
@@ -410,7 +512,7 @@ export class AttendanceService {
   }
 
   // Get teacher attendance by ID
-  static async getTeacherAttendanceById(teacherId: string) {
+  static async getTeacherAttendanceByTeacherId(teacherId: string) {
     const result = await db
       .select()
       .from(teacherAttendance)

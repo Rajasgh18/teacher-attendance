@@ -53,7 +53,7 @@ router.get("/stats", adminOrPrincipal, UserController.getUserStats);
 router.get("/search", adminOrPrincipal, UserController.searchUsers);
 router.get("/role/:role", adminOrPrincipal, UserController.getByRole);
 router.get("/email/:email", adminOrPrincipal, UserController.getByEmail);
-router.get("/:id", selfOrAdmin, UserController.getById);
+router.get("/:id", adminOrPrincipal, UserController.getById);
 
 // Routes accessible by admins only
 router.post("/", adminOrPrincipal, UserController.create);

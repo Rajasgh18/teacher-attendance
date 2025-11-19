@@ -1,6 +1,12 @@
 import { eq, and, like, asc, ilike } from "drizzle-orm";
 
-import { users, classes, students, studentAttendance } from "@/db/schema";
+import {
+  users,
+  classes,
+  students,
+  studentAttendance,
+  schools,
+} from "@/db/schema";
 import { db } from "@/db";
 import type { NewStudent } from "@/db/schema";
 import { NotFoundError, ConflictError } from "@/types";
@@ -22,11 +28,7 @@ export class StudentService {
     let whereConditions = [];
 
     if (search) {
-      whereConditions.push(
-        and(
-          ilike(students.firstName, `%${search}%`)
-        )
-      );
+      whereConditions.push(and(ilike(students.firstName, `%${search}%`)));
     }
 
     if (classId) {
@@ -64,9 +66,14 @@ export class StudentService {
             section: classes.section,
             academicYear: classes.academicYear,
           },
+          school: {
+            id: schools.id,
+            name: schools.name,
+          },
         })
         .from(students)
         .leftJoin(classes, eq(students.classId, classes.id))
+        .leftJoin(schools, eq(students.schoolId, schools.id))
         .where(whereClause)
         .orderBy(asc(students.studentId))
         .limit(limit)
@@ -114,9 +121,14 @@ export class StudentService {
           section: classes.section,
           academicYear: classes.academicYear,
         },
+        school: {
+          id: schools.id,
+          name: schools.name
+        }
       })
       .from(students)
       .leftJoin(classes, eq(students.classId, classes.id))
+      .leftJoin(schools, eq(students.schoolId, schools.id))
       .where(eq(students.id, id))
       .limit(1);
 

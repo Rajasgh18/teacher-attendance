@@ -30,24 +30,21 @@ router.get(
 );
 
 // Routes accessible by all authenticated users (teachers, admins)
-router.get("/", teacherOrAdmin, AttendanceController.getAllStudentAttendance);
-router.get("/:id", AttendanceController.getStudentAttendanceById);
+router.get(
+  "/student",
+  teacherOrAdmin,
+  AttendanceController.getAllStudentAttendance
+);
 
 // Routes accessible by teachers assigned to the class and admins
-router.post(
-  "/student",
-  AttendanceController.createStudentAttendance
-);
+router.post("/student", AttendanceController.createStudentAttendance);
 router.post(
   "/student/bulk",
   teacherOrAdmin,
   AttendanceController.createStudentAttendanceBulk
 );
 
-router.put(
-  "/student/:id",
-  AttendanceController.updateStudentAttendance
-);
+router.put("/student/:id", AttendanceController.updateStudentAttendance);
 
 router.get("/teacher", AttendanceController.getAllTeacherAttendance);
 
@@ -55,6 +52,8 @@ router.get(
   "/teacher/:teacherId",
   AttendanceController.getTeacherAttendanceById
 );
+
+router.get("/:id", AttendanceController.getAttendanceById);
 
 router.post("/teacher", AttendanceController.createTeacherAttendance);
 

@@ -1,5 +1,10 @@
 import { SubjectService } from "@/services/subjectService";
-import { sendBadRequest, sendCreated, sendSuccess, sendNotFound } from "@/utils/response";
+import {
+  sendBadRequest,
+  sendCreated,
+  sendSuccess,
+  sendNotFound,
+} from "@/utils/response";
 import { Request, Response } from "express";
 import { asyncHandler } from "@/middleware/errorHandler";
 
@@ -27,6 +32,44 @@ export class SubjectController {
       sendCreated(res, result, "Subject created successfully");
     } catch (error: any) {
       sendBadRequest(res, error.message || "Failed to create subject");
+    }
+  });
+
+  static getAllMarks = asyncHandler(async (req: Request, res: Response) => {
+    const { page, limit, search, studentId, subjectId } = req.query;
+
+    const query: any = {};
+    if (page) query.page = parseInt(page as string);
+    if (limit) query.limit = parseInt(limit as string);
+    if (search) query.search = search as string;
+    if (subjectId) query.subjectId = subjectId as string;
+    if (studentId) query.studentId = studentId as string;
+
+    try {
+      const result = await SubjectService.getAllMarks(query);
+      sendSuccess(res, result, "Subjects retrieved successfully");
+    } catch (error: any) {
+      sendBadRequest(res, error.message || "Failed to retrieve subjects");
+    }
+  });
+
+  static getMarksById = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!id) {
+      sendBadRequest(res, "Marks ID is required");
+      return;
+    }
+
+    console.log(id)
+    try {
+      const result = await SubjectService.getMarksById(id);
+      sendSuccess(res, result, "Marks retrieved successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to retrieve marks");
+      }
     }
   });
 
@@ -61,7 +104,10 @@ export class SubjectController {
       if (error.message?.includes("not found")) {
         sendNotFound(res, error.message);
       } else {
-        sendBadRequest(res, error.message || "Failed to retrieve subject marks");
+        sendBadRequest(
+          res,
+          error.message || "Failed to retrieve subject marks"
+        );
       }
     }
   });
@@ -84,35 +130,37 @@ export class SubjectController {
     }
   });
 
-  static createSubjectMarksBulk = asyncHandler(async (req: Request, res: Response) => {
-    try {
-      const { marksData } = req.body;
+  static createSubjectMarksBulk = asyncHandler(
+    async (req: Request, res: Response) => {
+      try {
+        const { marksData } = req.body;
 
-      if (!marksData || !Array.isArray(marksData) || marksData.length === 0) {
-        sendBadRequest(res, "Marks data array is required");
-        return;
+        if (!marksData || !Array.isArray(marksData) || marksData.length === 0) {
+          sendBadRequest(res, "Marks data array is required");
+          return;
+        }
+
+        const result = await SubjectService.createSubjectMarksBulk(marksData);
+
+        if (result.summary.errors > 0) {
+          // Send success with warnings if there are some errors
+          sendSuccess(
+            res,
+            result,
+            `Processed ${result.totalProcessed} marks with ${result.summary.errors} errors`
+          );
+        } else {
+          sendCreated(
+            res,
+            result,
+            `Successfully processed ${result.totalProcessed} marks`
+          );
+        }
+      } catch (error: any) {
+        sendBadRequest(res, error.message || "Failed to process marks data");
       }
-
-      const result = await SubjectService.createSubjectMarksBulk(marksData);
-
-      if (result.summary.errors > 0) {
-        // Send success with warnings if there are some errors
-        sendSuccess(
-          res,
-          result,
-          `Processed ${result.totalProcessed} marks with ${result.summary.errors} errors`
-        );
-      } else {
-        sendCreated(
-          res,
-          result,
-          `Successfully processed ${result.totalProcessed} marks`
-        );
-      }
-    } catch (error: any) {
-      sendBadRequest(res, error.message || "Failed to process marks data");
     }
-  });
+  );
 
   static updateSubject = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
@@ -129,6 +177,25 @@ export class SubjectController {
         sendNotFound(res, error.message);
       } else {
         sendBadRequest(res, error.message || "Failed to update subject");
+      }
+    }
+  });
+
+  static deleteMarks = asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    if (!id) {
+      sendBadRequest(res, "Marks ID is required");
+      return;
+    }
+
+    try {
+      await SubjectService.deleteMarks(id);
+      sendSuccess(res, null, "Marks deleted successfully");
+    } catch (error: any) {
+      if (error.message?.includes("not found")) {
+        sendNotFound(res, error.message);
+      } else {
+        sendBadRequest(res, error.message || "Failed to delete marks");
       }
     }
   });

@@ -66,7 +66,7 @@ export class UserController {
   // Get user by ID (admin only, or self)
   static getById = asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
-
+    console.log("yo incoming")
     if (!id) {
       sendBadRequest(res, "User ID is required");
       return;

@@ -238,7 +238,19 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
     fields: [students.classId],
     references: [classes.id],
   }),
+  marks: many(marks),
   attendance: many(studentAttendance),
+}));
+
+export const marksRelations = relations(marks, ({ one }) => ({
+  subject: one(subjects, {
+    fields: [marks.subjectId],
+    references: [subjects.id],
+  }),
+  student: one(students, {
+    fields: [marks.studentId],
+    references: [students.id],
+  }),
 }));
 
 export const teacherAttendanceRelations = relations(

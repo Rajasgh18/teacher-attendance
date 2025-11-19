@@ -31,6 +31,35 @@ export class AttendanceController {
     }
   );
 
+
+
+  // Get student attendance by ID (accessible by teachers and admins)
+  static getAttendanceById = asyncHandler(
+    async (req: Request, res: Response) => {
+      const { id } = req.params;
+      const {type} = req.query;
+
+      if (!id) {
+        sendBadRequest(res, "Attendance ID is required");
+        return;
+      }
+
+      let attendance;
+            
+      if(type === "teacher"){
+        attendance = await AttendanceService.getTeacherAttendanceById(id);
+      }else{
+        attendance = await AttendanceService.getStudentAttendanceById(id);
+      }
+      
+      sendSuccess(
+        res,
+        attendance,
+        "Attendance record retrieved successfully"
+      );
+    }
+  );
+
   // Get student attendance by ID (accessible by teachers and admins)
   static getStudentAttendanceById = asyncHandler(
     async (req: Request, res: Response) => {
@@ -251,25 +280,23 @@ export class AttendanceController {
   );
 
   // Get teacher attendance
-  static getAllTeacherAttendance = asyncHandler(
-    async (req: Request, res: Response) => {
-      const { page, limit, teacherId, classId, date } = req.query;
+  static getAllTeacherAttendance = async (req: Request, res: Response) => {
+    const { page, limit, teacherId, classId, date } = req.query;
 
-      const query: any = {};
-      if (page) query.page = parseInt(page as string);
-      if (limit) query.limit = parseInt(limit as string);
-      if (teacherId) query.teacherId = teacherId as string;
-      if (classId) query.classId = classId as string;
-      if (date) query.date = date as string;
+    const query: any = {};
+    if (page) query.page = parseInt(page as string);
+    if (limit) query.limit = parseInt(limit as string);
+    if (teacherId) query.teacherId = teacherId as string;
+    if (classId) query.classId = classId as string;
+    if (date) query.date = date as string;
 
-      const attendance = await AttendanceService.getTeacherAttendance(query);
-      sendSuccess(
-        res,
-        attendance,
-        "Teacher attendance records retrieved successfully"
-      );
-    }
-  );
+    const attendance = await AttendanceService.getTeacherAttendance(query);
+    sendSuccess(
+      res,
+      attendance,
+      "Teacher attendance records retrieved successfully"
+    );
+  };
 
   static getTeacherAttendanceById = asyncHandler(
     async (req: Request, res: Response) => {
@@ -281,7 +308,7 @@ export class AttendanceController {
       }
 
       const attendance =
-        await AttendanceService.getTeacherAttendanceById(teacherId);
+        await AttendanceService.getTeacherAttendanceByTeacherId(teacherId);
       sendSuccess(
         res,
         attendance,

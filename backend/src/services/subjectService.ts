@@ -1,5 +1,13 @@
 import { db } from "@/db";
-import { marks, NewMark, NewSubject, subjects } from "@/db/schema";
+import {
+  classes,
+  marks,
+  NewMark,
+  NewSubject,
+  schools,
+  students,
+  subjects,
+} from "@/db/schema";
 import { NotFoundError } from "@/types";
 import { and, asc, eq, like } from "drizzle-orm";
 
@@ -59,6 +67,101 @@ export class SubjectService {
       },
     };
   }
+  static async getAllMarks(
+    query: {
+      page?: number;
+      limit?: number;
+      search?: string;
+      subjectId?: string;
+      studentId?: string;
+    } = {}
+  ) {
+    const { page = 1, limit = 10, search, subjectId, studentId } = query;
+    const offset = (page - 1) * limit;
+
+    let whereConditions = [];
+
+    // if (search) {
+    //   whereConditions.push(
+    //     and(like(marks., `%${search}%`), like(marks.code, `%${search}%`))
+    //   );
+    // }
+
+    if (subjectId !== undefined) {
+      whereConditions.push(eq(marks.subjectId, subjectId));
+    }
+
+    if (studentId !== undefined) {
+      whereConditions.push(eq(marks.studentId, studentId));
+    }
+
+    const whereClause =
+      whereConditions.length > 0 ? and(...whereConditions) : undefined;
+
+    const [data, totalCount] = await Promise.all([
+      db
+        .select({
+          id: marks.id,
+          studentId: marks.studentId,
+          marks: marks.marks,
+          month: marks.month,
+          createdAt: subjects.createdAt,
+          updatedAt: subjects.updatedAt,
+          student: {
+            id: students.id,
+            classId: students.classId,
+            studentId: students.studentId,
+            firstName: students.firstName,
+            lastName: students.lastName,
+            email: students.email,
+            phone: students.phone,
+            schoolId: students.schoolId,
+            address: students.address,
+            dateOfBirth: students.dateOfBirth,
+            gender: students.gender,
+            isActive: students.isActive,
+            createdAt: students.createdAt,
+            updatedAt: students.updatedAt,
+          },
+          subject: {
+            id: subjects.id,
+            code: subjects.code,
+            name: subjects.name,
+            description: subjects.description,
+            isActive: subjects.isActive,
+            createdAt: subjects.createdAt,
+            updatedAt: subjects.updatedAt,
+          },
+          school: {
+            id: schools.id,
+            name: schools.name,
+          },
+        })
+        .from(marks)
+        .leftJoin(subjects, eq(marks.subjectId, subjects.id))
+        .leftJoin(students, eq(marks.studentId, students.id))
+        .leftJoin(schools, eq(students.schoolId, schools.id))
+        .where(whereClause)
+        .orderBy(asc(marks.id))
+        .limit(limit)
+        .offset(offset),
+      db
+        .select({ count: marks.id })
+        .from(marks)
+        .where(whereClause)
+        .then(result => result.length),
+    ]);
+
+    return {
+      data,
+      pagination: {
+        page,
+        limit,
+        total: totalCount,
+        totalPages: Math.ceil(totalCount / limit),
+      },
+    };
+  }
 
   static async createSubject(subject: NewSubject) {
     const result = await db.insert(subjects).values(subject);
@@ -87,6 +190,65 @@ export class SubjectService {
     return result;
   }
 
+  static async getMarksById(id: string) {
+    const result = await db
+      .select({
+        id: marks.id,
+        studentId: marks.studentId,
+        marks: marks.marks,
+        month: marks.month,
+        createdAt: subjects.createdAt,
+        updatedAt: subjects.updatedAt,
+        student: {
+          id: students.id,
+          classId: students.classId,
+          studentId: students.studentId,
+          firstName: students.firstName,
+          lastName: students.lastName,
+          email: students.email,
+          phone: students.phone,
+          schoolId: students.schoolId,
+          address: students.address,
+          dateOfBirth: students.dateOfBirth,
+          gender: students.gender,
+          isActive: students.isActive,
+          createdAt: students.createdAt,
+          updatedAt: students.updatedAt,
+        },
+        subject: {
+          id: subjects.id,
+          code: subjects.code,
+          name: subjects.name,
+          description: subjects.description,
+          isActive: subjects.isActive,
+          createdAt: subjects.createdAt,
+          updatedAt: subjects.updatedAt,
+        },
+        class: {
+          id: classes.id,
+          name: classes.name,
+          grade: classes.grade,
+          section: classes.section,
+          academicYear: classes.academicYear,
+        },
+        school: {
+          id: schools.id,
+          name: schools.name,
+        },
+      })
+      .from(marks)
+      .leftJoin(subjects, eq(marks.subjectId, subjects.id))
+      .leftJoin(students, eq(marks.studentId, students.id))
+      .leftJoin(schools, eq(students.schoolId, schools.id))
+      .leftJoin(classes, eq(students.classId, classes.id))
+      .where(eq(marks.id, id));
+    if (!result.length) {
+      throw new NotFoundError("Subject not found");
+    }
+
+    return result[0]!;
+  }
+
   static async getSubjectById(id: string) {
     const result = await db.select().from(subjects).where(eq(subjects.id, id));
     if (!result.length) {
@@ -98,6 +260,11 @@ export class SubjectService {
 
   static async getSubjectMarks(id: string) {
     const result = await db.select().from(marks).where(eq(marks.subjectId, id));
+    return result;
+  }
+
+  static async deleteMarks(id: string) {
+    const result = await db.delete(marks).where(eq(marks.id, id));
     return result;
   }
 

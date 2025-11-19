@@ -97,6 +97,8 @@ export const authorize = (...roles: UserRole[]) => {
     res: Response,
     next: NextFunction
   ): void => {
+    console.log(req.route.path)
+    
     if (!req.user) {
       throw new AuthenticationError("Authentication required");
     }

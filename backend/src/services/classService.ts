@@ -1,9 +1,16 @@
 import { eq, and, like, asc, desc } from "drizzle-orm";
 
-import { classes, students, teacherAssignments, users } from "@/db/schema";
+import {
+  classes,
+  schools,
+  students,
+  teacherAssignments,
+  users,
+} from "@/db/schema";
 import { db } from "@/db";
 import type { NewClass } from "@/db/schema";
 import { NotFoundError, ConflictError } from "@/types";
+import { isAscii } from "buffer";
 
 export class ClassService {
   // Get all classes with pagination and search
@@ -59,8 +66,23 @@ export class ClassService {
   // Get class by ID
   static async getById(id: string) {
     const result = await db
-      .select()
+      .select({
+        id: classes.id,
+        schoolId: classes.schoolId,
+        name: classes.name,
+        grade: classes.grade,
+        section: classes.section,
+        academicYear: classes.academicYear,
+        isActive: classes.isActive,
+        createdAt: classes.createdAt,
+        updatedAt: classes.updatedAt,
+        school: {
+          id: schools.id,
+          name: schools.name,
+        },
+      })
       .from(classes)
+      .leftJoin(schools, eq(schools.id, classes.schoolId))
       .where(eq(classes.id, id))
       .limit(1);
 
