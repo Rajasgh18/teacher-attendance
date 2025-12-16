@@ -3,6 +3,7 @@ export interface Subject {
   name: string;
   code: string;
   description: string;
+  grade: string;
   isActive: boolean;
   createdAt: number;
   updatedAt: number;

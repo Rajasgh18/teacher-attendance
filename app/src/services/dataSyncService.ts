@@ -82,6 +82,7 @@ class DataSyncService {
           limit: 100,
         }),
       ]);
+      
       const studentsData = (
         await Promise.all(
           classes.map(cls =>

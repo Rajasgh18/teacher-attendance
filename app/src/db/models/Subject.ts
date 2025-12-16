@@ -9,6 +9,7 @@ export default class Subject extends Model {
   @field("code") code!: string;
   @field("description") description!: string | null;
   @field("is_active") isActive!: boolean;
+  @field("grade") grade!: string;
   @readonly @date("created_at") createdAt!: number;
   @readonly @date("updated_at") updatedAt!: number;
 }

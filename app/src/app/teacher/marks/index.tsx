@@ -171,11 +171,18 @@ export default function MarksPage() {
           />
           <Dropdown
             placeholder="Select Subject"
-            options={subjects.map(s => ({
-              id: s.id,
-              label: s.name,
-              value: s.id,
-            }))}
+            options={subjects
+              .filter(
+                s =>
+                  s.grade ===
+                  classes.find(c => c.classId === selectedClassId)?.grade,
+              )
+              .map(s => ({
+                id: s.id,
+                label: s.name,
+                value: s.id,
+              }))}
+            disabled={!selectedClassId}
             selectedValue={selectedSubjectId}
             onSelect={option => setSelectedSubjectId(option.value)}
           />

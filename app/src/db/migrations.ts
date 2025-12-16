@@ -103,6 +103,7 @@ export default schemaMigrations({
             { name: "subject_id", type: "string" },
             { name: "name", type: "string" },
             { name: "code", type: "string" },
+            { name: "grade", type: "string" },
             { name: "description", type: "string", isOptional: true },
             { name: "is_active", type: "boolean" },
             { name: "created_at", type: "number" },

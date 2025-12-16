@@ -170,6 +170,7 @@ export const subjects = pgTable("subjects", {
   code: varchar("code", { length: 100 }).notNull().unique(),
   description: text("description"),
   isActive: boolean("is_active").default(true).notNull(),
+  grade: varchar("grade", { length: 100 }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

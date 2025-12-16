@@ -798,6 +798,7 @@ export class DatabaseService {
     name: string;
     code: string;
     description: string;
+    grade: string;
     isActive: boolean;
   }): Promise<void> {
     await database.write(async () => {
@@ -807,6 +808,7 @@ export class DatabaseService {
         sb.code = subject.code;
         sb.description = subject.description;
         sb.isActive = subject.isActive;
+        sb.grade = subject.grade;
       });
     });
   }
@@ -928,6 +930,7 @@ export class DatabaseService {
         id: subject.id,
         name: subject.name,
         code: subject.code,
+        grade: subject.grade,
         description: subject.description,
         isActive: subject.isActive,
       });
